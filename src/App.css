@@ -3,11 +3,26 @@
     margin-left:655px;
     margin-top: 24px;
     z-index: 99999;
+    display: flex;
+    gap: 6px;
 }
 
 .toolbar :hover {
     background-color: gray;
     cursor: pointer;
+}
+
+.linebtn {
+    display: inline-flex;
+    padding: 0.3125rem;
+    justify-content: center;
+    align-items: center;
+    gap: 0.625rem;
+    border-radius: 0.25rem;
+    border: 1px solid #3764BE;
+    
+    background: #5482E2;
+
 }
 
 

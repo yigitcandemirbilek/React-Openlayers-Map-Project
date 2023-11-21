@@ -27,7 +27,7 @@ const MapComponent = () => {
       }),
     });
 
-   const vectorSource = new VectorSource({});
+    const vectorSource = new VectorSource({});
 
     const vectorLayer = new VectorLayer({
       source: vectorSource,
@@ -38,6 +38,11 @@ const MapComponent = () => {
     const drawInteraction = new Draw({
       source: vectorSource,
       type: 'Polygon',
+    });
+
+    drawInteraction.on('drawend', (event) => {
+      const coordinates = event.feature.getGeometry().getCoordinates();
+      console.log('Polygon Koordinatları:', coordinates);
     });
 
     map.addInteraction(drawInteraction);

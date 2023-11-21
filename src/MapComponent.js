@@ -4,6 +4,7 @@ import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
+import DragPan from 'ol/interaction/DragPan';
 import { Draw, Modify, Pointer, Snap } from 'ol/interaction';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Vector as VectorSource } from 'ol/source';
@@ -15,6 +16,9 @@ const MapComponent = () => {
     let drawPolygonInteraction;
     let drawLineInteraction;
     let drawPointInteraction;
+    const [dragPanInteraction, setDragPanInteraction] = useState(null);
+
+
 
 
   useEffect(() => {
@@ -38,6 +42,10 @@ const MapComponent = () => {
     });
 
     initialMap.addLayer(vectorLayer);
+
+    const dragPan = new DragPan({ kinetic: false });
+    initialMap.addInteraction(dragPan);
+    dragPan.setActive(false);
 
     setMap(initialMap);
 
@@ -138,6 +146,16 @@ const MapComponent = () => {
     defaultView.setZoom(6.6);
   };
 
+  const handleDragPanButtonClick = () => {
+    if (dragPanInteraction) {
+      const isActive = dragPanInteraction.getActive();
+      dragPanInteraction.setActive(!isActive);
+    }
+  };
+
+
+
+  
 
   return (
     <div id="map" style={{ width: '100%', height: '1000px' }}>
@@ -160,6 +178,10 @@ const MapComponent = () => {
 <path fill-rule="evenodd" clip-rule="evenodd" d="M10.8055 20.3265C12.361 20.3265 13.6221 19.0579 13.6221 17.493C13.6221 15.9281 12.361 14.6595 10.8055 14.6595C9.24988 14.6595 7.98883 15.9281 7.98883 17.493C7.98883 19.0579 9.24988 20.3265 10.8055 20.3265ZM10.8055 21.312C12.9021 21.312 14.6017 19.6021 14.6017 17.493C14.6017 15.3838 12.9021 13.674 10.8055 13.674C8.70886 13.674 7.00924 15.3838 7.00924 17.493C7.00924 19.6021 8.70886 21.312 10.8055 21.312Z" fill="white"/>
 <path fill-rule="evenodd" clip-rule="evenodd" d="M0 17.493C0 17.493 4.4241 24 10.8054 24C17.1868 24 21.6109 17.493 21.6109 17.493C21.6109 17.493 17.1868 10.986 10.8054 10.986C4.4241 10.986 0 17.493 0 17.493ZM1.22728 17.493C1.31717 17.6061 1.4209 17.7334 1.53795 17.8722C2.02679 18.4518 2.74189 19.2246 3.6439 19.9954C5.46557 21.5521 7.94709 23.0145 10.8054 23.0145C13.6638 23.0145 16.1453 21.5521 17.967 19.9954C18.869 19.2246 19.5841 18.4518 20.0729 17.8722C20.19 17.7334 20.2937 17.6061 20.3836 17.493C20.2937 17.3799 20.19 17.2526 20.0729 17.1138C19.5841 16.5341 18.869 15.7613 17.967 14.9905C16.1453 13.4339 13.6638 11.9714 10.8054 11.9714C7.94709 11.9714 5.46557 13.4339 3.6439 14.9905C2.74189 15.7613 2.02679 16.5341 1.53795 17.1138C1.4209 17.2526 1.31717 17.3799 1.22728 17.493Z" fill="white"/>
 <path fill-rule="evenodd" clip-rule="evenodd" d="M7.62683 4.96288L10.9197 8.35463L10.2189 9.04318L5.77485 4.46569L10.2233 0L10.9152 0.697565L7.64806 3.97741L14.0905 3.9774C18.129 3.9774 20.658 5.64315 22.1472 7.76532C23.6152 9.85732 24.0457 12.3512 23.9963 14.0225V18.7534H23.0167V14.0075L23.0169 13.9999C23.063 12.4896 22.6675 10.2155 21.3469 8.33365C20.0453 6.47876 17.8178 4.96287 14.0905 4.96287L7.62683 4.96288Z" fill="white"/>
+</svg></button>
+<button onClick={handleDragPanButtonClick} 
+ className='dragbtn'><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M3.1219 15.2722L9.74883 21.8746C11.1152 23.2358 12.9651 24.0001 14.8937 24C18.5074 24 21.4369 21.0705 21.4369 17.4567V8.96529C21.4369 7.91885 20.5886 7.07049 19.5421 7.07049C19.4484 7.07049 19.3564 7.07729 19.2663 7.09042C18.9191 7.14104 18.6024 7.28582 18.3431 7.49804C18.2577 7.16075 18.0818 6.85951 17.8427 6.62165C17.5001 6.2807 17.0278 6.06997 16.5062 6.06997C16.4218 6.06997 16.3387 6.0755 16.2573 6.08619C15.9331 6.12874 15.6347 6.25325 15.3836 6.43823H15.317C15.2354 6.11521 15.069 5.82591 14.843 5.5953C14.506 5.25144 14.0364 5.03809 13.5169 5.03809C13.4792 5.03809 13.4418 5.03922 13.4046 5.04144C13.0307 5.06376 12.6866 5.19674 12.4046 5.40804V1.8934C12.4046 0.847702 11.5568 0 10.5112 0C9.46554 0 8.61779 0.847702 8.61779 1.8934V13.8606L5.30376 12.2236C4.5139 11.8335 3.5595 12.0376 2.9984 12.7166C2.37364 13.4726 2.42715 14.58 3.1219 15.2722Z" fill="white"/>
 </svg></button>
 
       </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import 'ol/ol.css';
+import './App.css';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -9,6 +10,10 @@ import { Draw, Modify, Pointer, Snap } from 'ol/interaction';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Vector as VectorSource } from 'ol/source';
 import { fromLonLat } from 'ol/proj';
+import html2canvas from 'html2canvas';
+import {CameraOutlined} from '@ant-design/icons';
+
+
 
 const MapComponent = () => {
     const turkeyCenter = fromLonLat([35.1683, 37.1616]);
@@ -17,7 +22,7 @@ const MapComponent = () => {
     let drawLineInteraction;
     let drawPointInteraction;
     const [dragPanInteraction, setDragPanInteraction] = useState(null);
-
+    const [isDragActive, setIsDragActive] = useState(false);
 
 
 
@@ -45,8 +50,7 @@ const MapComponent = () => {
 
     const dragPan = new DragPan({ kinetic: false });
     initialMap.addInteraction(dragPan);
-    dragPan.setActive(false);
-
+    setDragPanInteraction(dragPan);
     setMap(initialMap);
 
     return () => {
@@ -148,19 +152,34 @@ const MapComponent = () => {
 
   const handleDragPanButtonClick = () => {
     if (dragPanInteraction) {
-      const isActive = dragPanInteraction.getActive();
-      dragPanInteraction.setActive(!isActive);
+      setIsDragActive(!isDragActive);
+      dragPanInteraction.setActive(!isDragActive);
     }
   };
 
-
-
+  const takeScreenshot = () => {
+    const mapElement = document.getElementById('map');
   
+    html2canvas(mapElement).then((canvas) => {
+      canvas.toBlob((blob) => {
+        const screenshotBlob = new Blob([blob], { type: 'image/png' });
+        
+        // Ekran görüntüsünü panoya kopyalama
+        navigator.clipboard.write([new ClipboardItem({ 'image/png': screenshotBlob })])
+          .then(() => {
+            console.log('Ekran görüntüsü panoya kopyalandı.');
+          })
+          .catch((error) => {
+            console.error('Panoya kopyalama işlemi başarısız oldu:', error);
+          });
+      });
+    });
+  };
 
   return (
     <div id="map" style={{ width: '100%', height: '1000px' }}>
       <div className='toolbar'>
-      <button onClick={handlePointDrawButtonClick} className='pointbtn'><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <button  onClick={handlePointDrawButtonClick} className='pointbtn'><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M11.9999 1.10006C11.0891 1.09294 10.186 1.26762 9.34355 1.61386C8.50109 1.96011 7.73618 2.47096 7.09362 3.11651C6.45105 3.76205 5.94374 4.52932 5.6014 5.37337C5.25906 6.21742 5.08856 7.1213 5.0999 8.03206C5.0999 11.9141 8.8889 17.0421 11.9999 23.0001C15.1109 17.0431 18.8999 11.9141 18.8999 8.03206C18.9112 7.1213 18.7407 6.21742 18.3984 5.37337C18.056 4.52932 17.5487 3.76205 16.9062 3.11651C16.2636 2.47096 15.4987 1.96011 14.6562 1.61386C13.8138 1.26762 12.9107 1.09294 11.9999 1.10006ZM11.9999 11.0001C11.4066 11.0001 10.8265 10.8241 10.3332 10.4945C9.83984 10.1648 9.45532 9.69629 9.22826 9.14811C9.00119 8.59994 8.94178 7.99674 9.05754 7.41479C9.1733 6.83285 9.45902 6.2983 9.87857 5.87874C10.2981 5.45919 10.8327 5.17346 11.4146 5.05771C11.9966 4.94195 12.5998 5.00136 13.1479 5.22842C13.6961 5.45549 14.1647 5.84 14.4943 6.33335C14.8239 6.8267 14.9999 7.40672 14.9999 8.00006C14.9999 8.79571 14.6838 9.55877 14.1212 10.1214C13.5586 10.684 12.7955 11.0001 11.9999 11.0001Z" fill="white"/>
 </svg></button>
       <button className='polygonbtn' onClick={handlePolygonDrawButtonClick}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -183,6 +202,7 @@ const MapComponent = () => {
  className='dragbtn'><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path fill-rule="evenodd" clip-rule="evenodd" d="M3.1219 15.2722L9.74883 21.8746C11.1152 23.2358 12.9651 24.0001 14.8937 24C18.5074 24 21.4369 21.0705 21.4369 17.4567V8.96529C21.4369 7.91885 20.5886 7.07049 19.5421 7.07049C19.4484 7.07049 19.3564 7.07729 19.2663 7.09042C18.9191 7.14104 18.6024 7.28582 18.3431 7.49804C18.2577 7.16075 18.0818 6.85951 17.8427 6.62165C17.5001 6.2807 17.0278 6.06997 16.5062 6.06997C16.4218 6.06997 16.3387 6.0755 16.2573 6.08619C15.9331 6.12874 15.6347 6.25325 15.3836 6.43823H15.317C15.2354 6.11521 15.069 5.82591 14.843 5.5953C14.506 5.25144 14.0364 5.03809 13.5169 5.03809C13.4792 5.03809 13.4418 5.03922 13.4046 5.04144C13.0307 5.06376 12.6866 5.19674 12.4046 5.40804V1.8934C12.4046 0.847702 11.5568 0 10.5112 0C9.46554 0 8.61779 0.847702 8.61779 1.8934V13.8606L5.30376 12.2236C4.5139 11.8335 3.5595 12.0376 2.9984 12.7166C2.37364 13.4726 2.42715 14.58 3.1219 15.2722Z" fill="white"/>
 </svg></button>
+<button onClick={takeScreenshot} className='screenshotBtn'><CameraOutlined /></button>
 
       </div>
     </div>

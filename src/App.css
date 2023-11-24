@@ -15,6 +15,7 @@
 }
 
 .pointbtn {
+    content: attr(data-tooltip);
     display: inline-flex;
     padding: 0.3125rem;
     justify-content: center;
@@ -27,6 +28,10 @@
 
 }
 
+.pointbtn:hover::before {
+    display: block;
+  }
+
 .linebtn {
     display: inline-flex;
     padding: 0.3125rem;
@@ -35,6 +40,7 @@
     gap: 0.625rem;
     border-radius: 0rem 0.25rem 0.25rem 0rem;
     border: 1px solid #3764BE;
+    
     
     background: #5482E2;
 
@@ -88,6 +94,20 @@
     
     background: #5482E2;
     
+}
+
+.screenshotBtn{
+    display: inline-flex;
+    padding: 0.3125rem;
+    justify-content: center;
+    align-items: center;
+    gap: 0.625rem;
+    border-radius: 0rem 0.25rem 0.25rem 0rem;
+    border: 1px solid #3764BE;
+    
+    background: #5482E2;
+    color: white;
+    font-size: 1.5rem;
 }
 
 .ol-control button {

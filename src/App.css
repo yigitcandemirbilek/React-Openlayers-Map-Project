@@ -1,8 +1,12 @@
+/* Global olarak bazı renkler atandı*/
+
 :root {
     --primary-btn-color:rgb(2,32,92) ;
     --primary-hover-btn-color:rgb(0,165,255);
 
 }
+
+/* Toolbarın cssleri*/
 
 .toolbar {
     position: absolute;
@@ -20,6 +24,8 @@
     background-color: var(--primary-hover-btn-color);
     cursor: pointer;
 }
+
+/*Point butonun cssleri*/
 
 .pointbtn {
     content: attr(data-tooltip);
@@ -40,6 +46,8 @@
     display: block;
   }
 
+/*Line button cssleri*/
+
 .linebtn {
     display: inline-flex;
     padding: 0.3125rem;
@@ -59,6 +67,7 @@
     display: block;
 }
 
+/*Polygon button cssleri*/
 
 .polygonbtn  {
     display: inline-flex;
@@ -77,6 +86,8 @@
     display: block;
 }
 
+/*Clear button cssleri*/
+
 .clearbtn {
     display: inline-flex;
     padding: 0.3125rem;
@@ -94,6 +105,8 @@
     display: block;
 }
 
+/*Map reset button cssleri */
+
 .mapresetbtn{
     display: inline-flex;
     padding: 0.3125rem;
@@ -110,6 +123,8 @@
     content: attr(title);
     display: block;
 }
+
+/*Dragpan button cssleri */
 
 .dragbtn{
     display: inline-flex;
@@ -129,6 +144,8 @@
     display: block;
 }
 
+/*Screenshot button cssleri */
+
 .screenshotBtn{
     display: inline-flex;
     padding: 0.3125rem;
@@ -146,6 +163,8 @@
 .screenshotBtn:hover::after{
     display: block;
 }
+
+/*Zoom butonlarının cssleri */
 
 .ol-control button {
     display: block;
@@ -174,6 +193,8 @@
 .ol-control{
     margin-top: 24px;
 }
+
+/* Popupların cssleri */
 
 .popup{
     position: absolute;
@@ -209,6 +230,17 @@
     border-width: 11px;
     left: 48px;
     margin-left: -11px;
+}
+
+.popup button {
+    background-color: var(--primary-btn-color);
+    color: white; 
+    border-radius: 12%;
+}
+
+.popup button:hover {
+    background-color: var(--primary-hover-btn-color);
+    cursor: pointer;
 }
 
 

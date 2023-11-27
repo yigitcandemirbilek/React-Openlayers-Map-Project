@@ -1,3 +1,4 @@
+//İmportlar burada tutuluyor
 import React, { useEffect, useState } from 'react';
 import 'ol/ol.css';
 import './App.css';
@@ -17,6 +18,7 @@ import { Overlay } from 'ol';
 
 
 
+//Bu MapComponent fonksiyonunda haritamızı getiriyoruz.
 
 const MapComponent = () => {
 	const turkeyCenter = fromLonLat([35.1683, 37.1616]);
@@ -26,6 +28,11 @@ const MapComponent = () => {
 	let drawPointInteraction;
 	const [dragPanInteraction, setDragPanInteraction] = useState(null);
 	const [isDragActive, setIsDragActive] = useState(false);
+  const [popups, setPopups] = useState([]);
+  const pointButton = document.querySelector('.pointbtn');
+  const polygonButton = document.querySelector('.polygonbtn');
+  const lineButton = document.querySelector('.linebtn')
+
 
 	useEffect(() => {
 		const initialMap = new Map({
@@ -35,11 +42,16 @@ const MapComponent = () => {
 					source: new OSM(),
 				}),
 			],
+
+      // Bu kısımda haritamız açıldığında nereye fokuslanmasını gerektiğini yazdık.
+
 			view: new View({
 				center: turkeyCenter,
 				zoom: 6.6,
 			}),
 		});
+
+    //Burada layerları oluşturduk.
 
 		const vectorSource = new VectorSource({});
 
@@ -54,6 +66,8 @@ const MapComponent = () => {
 
 		setMap(initialMap);
 
+    //dragpan toolunu burada oluşturduk.
+
 		const dragPan = new DragPan({ kinetic: false });
 		initialMap.addInteraction(dragPan);
 		setDragPanInteraction(dragPan);
@@ -64,7 +78,8 @@ const MapComponent = () => {
 		};
 	}, []);
 
-	//-------------------------------------------------------
+  //Popuplar burada oluşturuluyor.
+
 	const displayPopup = (coordinates) => {
 		const popup = new Overlay({
 			position: coordinates,
@@ -74,13 +89,15 @@ const MapComponent = () => {
 
 		const popupElement = popup.getElement();
 		popupElement.className = "popup";
-		popupElement.innerHTML = `<p>Coordinates: ${coordinates}</p>`;
+		popupElement.innerHTML = `<p>Coordinates: ${coordinates}<Button>Kaydet</Button>`;
+
 
 		map.addOverlay(popup);
+
+    setPopups([...popups, popup]);
+
     
 	};
-
-  //-----------------------------------------------------second try
 
   const displayPopupForCoordinates = (coordinates) => {
     const popup = new Overlay({
@@ -92,9 +109,12 @@ const MapComponent = () => {
     const popupElement = popup.getElement();
     popupElement.className = 'popup';
     popupElement.innerHTML = `<p>Coordinates: ${coordinates}</p>`;
+    popupElement.button = `<button>Kaydet</button>`;
   
     map.addOverlay(popup);
   };
+
+  //Polygon tool oluşturuldu.
 
 	const activatePolygonDrawTool = () => {
 		deactivateDrawTools();
@@ -124,6 +144,8 @@ const MapComponent = () => {
 		map.addInteraction(snapInteraction);
 	};
 
+  //line tool burada oluşturuldu.
+
 	const activateLineDrawTool = () => {
     deactivateDrawTools();
     drawLineInteraction = new Draw({
@@ -151,6 +173,8 @@ const MapComponent = () => {
 		map.addInteraction(snapInteraction);
 	};
 
+  //Point tool oluşturuldu.
+
 	const activatePointDrawTool = () => {
 		deactivateDrawTools();
 		drawPointInteraction = new Draw({
@@ -167,17 +191,40 @@ const MapComponent = () => {
 		map.addInteraction(drawPointInteraction);
 	};
 
+  //Açılan popupları kapatmak için oluşturulan fonksiyon
+
+  const closePopups = () => {
+    const overlays = map.getOverlays().getArray();
+    overlays.forEach(overlay => {
+      if (overlay.getElement() && overlay.getElement().classList.contains('popup')) {
+        map.removeOverlay(overlay);
+      }
+    });
+  };
+
+  //toollarımızın kapanması için oluşturulan fonksiyon
+
 	const deactivateDrawTools = () => {
+   
+
 		if (drawPolygonInteraction) {
 			map.removeInteraction(drawPolygonInteraction);
+      polygonButton.disabled = false;
+      closePopups();
 		}
 		if (drawLineInteraction) {
 			map.removeInteraction(drawLineInteraction);
+      lineButton.disabled = false;
+      closePopups();
 		}
 		if (drawPointInteraction) {
 			map.removeInteraction(drawPointInteraction);
+      pointButton.disabled = false;
+      closePopups();
 		}
 	};
+
+ //Buton click eventleri
 
 	const handlePolygonDrawButtonClick = () => {
 		activatePolygonDrawTool();
@@ -189,6 +236,7 @@ const MapComponent = () => {
 
 	const handlePointDrawButtonClick = () => {
 		activatePointDrawTool();
+    
 	};
 
 	const handleClearButtonClick = () => {
@@ -227,6 +275,8 @@ const MapComponent = () => {
 			});
 		});
 	};
+
+  //Haritamızın return edildiği yer butonlarımızın oluşturulup yönetldiği yer
 
 	return (
 		<div id="map" style={{ width: "100%", height: "1000px" }}>

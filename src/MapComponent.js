@@ -83,27 +83,6 @@ const MapComponent = () => {
 		};
 	}, []);
 
-  //Popuplar burada oluşturuluyor.
-
-	const displayPopup = (coordinates) => {
-		const popup = new Overlay({
-			position: coordinates,
-			element: document.createElement("div"),
-			stopEvent: false,
-		});
-
-		const popupElement = popup.getElement();
-		popupElement.className = "popup";
-		popupElement.innerHTML = `<p>Coordinates: ${coordinates}<Button>Kaydet</Button>`;
-
-
-		map.addOverlay(popup);
-
-    setPopups([...popups, popup]);
-
-    
-	};
-
   	const displayPopupForCoordinates = (coordinates) => {
 
 		
@@ -226,6 +205,8 @@ const MapComponent = () => {
       pointButton.disabled = false;
 		}
 	};
+
+
 
  //Buton click eventleri
 

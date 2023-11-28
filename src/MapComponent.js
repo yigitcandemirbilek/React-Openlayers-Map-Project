@@ -199,7 +199,7 @@ const MapComponent = () => {
 		drawPointInteraction.on("drawend", (event) => {
 			const coordinates = event.feature.getGeometry().getCoordinates();
 			console.log("Nokta Koordinatları:", coordinates);
-			displayPopup(coordinates);
+			displayPopupForCoordinates(coordinates);
 		});
 
 		map.addInteraction(drawPointInteraction);
@@ -207,34 +207,23 @@ const MapComponent = () => {
 
   //Açılan popupları kapatmak için oluşturulan fonksiyon
 
-  const closePopups = () => {
-    const overlays = map.getOverlays().getArray();
-    overlays.forEach(overlay => {
-      if (overlay.getElement() && overlay.getElement().classList.contains('popup')) {
-        map.removeOverlay(overlay);
-      }
-    });
-  };
+
 
   //toollarımızın kapanması için oluşturulan fonksiyon
 
 	const deactivateDrawTools = () => {
-   
 
 		if (drawPolygonInteraction) {
 			map.removeInteraction(drawPolygonInteraction);
       polygonButton.disabled = false;
-      closePopups();
 		}
 		if (drawLineInteraction) {
 			map.removeInteraction(drawLineInteraction);
       lineButton.disabled = false;
-      closePopups();
 		}
 		if (drawPointInteraction) {
 			map.removeInteraction(drawPointInteraction);
       pointButton.disabled = false;
-      closePopups();
 		}
 	};
 

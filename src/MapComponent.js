@@ -16,7 +16,12 @@ import {CameraOutlined} from '@ant-design/icons';
 import { Overlay } from 'ol';
 
 
-
+function decimalDegreesToDMS(decimal) {
+	const degrees = Math.floor(decimal);
+	const minutes = Math.floor((decimal - degrees) * 60);
+	const seconds = ((decimal - degrees - (minutes / 60)) * 3600).toFixed(2);
+	return `${degrees}° ${minutes}' ${seconds}"`;
+  }
 
 //Bu MapComponent fonksiyonunda haritamızı getiriyoruz.
 
@@ -99,7 +104,16 @@ const MapComponent = () => {
     
 	};
 
-  const displayPopupForCoordinates = (coordinates) => {
+  	const displayPopupForCoordinates = (coordinates) => {
+
+		
+	const lat = decimalDegreesToDMS(coordinates[1]);
+  	const lon = decimalDegreesToDMS(coordinates[0]);
+  	const latDirection = coordinates[1] >= 0 ? 'N' : 'S';
+  	const lonDirection = coordinates[0] >= 0 ? "E" : "W";
+
+
+
     const popup = new Overlay({
       position: coordinates,
       element: document.createElement('div'),
@@ -108,7 +122,7 @@ const MapComponent = () => {
   
     const popupElement = popup.getElement();
     popupElement.className = 'popup';
-    popupElement.innerHTML = `<p>Coordinates: ${coordinates}</p>`;
+    popupElement.innerHTML = `<p>Latitude: ${lat} ${latDirection}<br>Longitude: ${lon} ${lonDirection} <button>Kaydet</button></p>`;
     popupElement.button = `<button>Kaydet</button>`;
   
     map.addOverlay(popup);

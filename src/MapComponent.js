@@ -33,11 +33,11 @@ const MapComponent = () => {
 	let drawPointInteraction;
 	const [dragPanInteraction, setDragPanInteraction] = useState(null);
 	const [isDragActive, setIsDragActive] = useState(false);
-  const [popups, setPopups] = useState([]);
-  const pointButton = document.querySelector('.pointbtn');
-  const polygonButton = document.querySelector('.polygonbtn');
-  const lineButton = document.querySelector('.linebtn')
-
+	const pointButton = document.querySelector('.pointbtn');
+	const polygonButton = document.querySelector('.polygonbtn');
+	const lineButton = document.querySelector('.linebtn')
+	let popups = [];
+	
 
 	useEffect(() => {
 		const initialMap = new Map({
@@ -83,7 +83,9 @@ const MapComponent = () => {
 		};
 	}, []);
 
-  	const displayPopupForCoordinates = (coordinates) => {
+	//Popup koordinatları oluşturulur.
+
+  	const createPopups = (coordinates) => {
 
 		
 	const lat = decimalDegreesToDMS(coordinates[1]);
@@ -105,8 +107,21 @@ const MapComponent = () => {
     popupElement.button = `<button>Kaydet</button>`;
   
     map.addOverlay(popup);
+
+	popups.push(popup);
+
   };
 
+  const closePopups = () => {
+	popups.forEach((popup) => {
+		map.removeOverlay(popup);
+		
+
+	  });
+  };
+  
+
+  
   //Polygon tool oluşturuldu.
 
 	const activatePolygonDrawTool = () => {
@@ -120,7 +135,7 @@ const MapComponent = () => {
 			const coordinates = event.feature.getGeometry().getCoordinates()[0];
 			console.log("Polygon Koordinatları:", coordinates);
 			coordinates.forEach((coordinate) => {
-				displayPopupForCoordinates(coordinate);
+				createPopups(coordinate);
 			});
 		});
 
@@ -149,7 +164,7 @@ const MapComponent = () => {
     drawLineInteraction.on("drawend", (event) => {
         const coordinates = event.feature.getGeometry().getCoordinates();
         coordinates.forEach(coordinate => {
-            displayPopupForCoordinates(coordinate);
+            createPopups(coordinate);
         });
     });
 
@@ -178,7 +193,7 @@ const MapComponent = () => {
 		drawPointInteraction.on("drawend", (event) => {
 			const coordinates = event.feature.getGeometry().getCoordinates();
 			console.log("Nokta Koordinatları:", coordinates);
-			displayPopupForCoordinates(coordinates);
+			createPopups(coordinates);
 		});
 
 		map.addInteraction(drawPointInteraction);
@@ -191,6 +206,7 @@ const MapComponent = () => {
   //toollarımızın kapanması için oluşturulan fonksiyon
 
 	const deactivateDrawTools = () => {
+		closePopups();
 
 		if (drawPolygonInteraction) {
 			map.removeInteraction(drawPolygonInteraction);
@@ -226,6 +242,8 @@ const MapComponent = () => {
 	const handleClearButtonClick = () => {
 		const vectorSource = map.getLayers().item(1).getSource();
 		vectorSource.clear();
+		closePopups();
+		deactivateDrawTools();
 	};
 
 	const handleResetViewButtonClick = () => {

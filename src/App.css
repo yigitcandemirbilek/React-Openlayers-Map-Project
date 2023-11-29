@@ -244,3 +244,41 @@
 }
 
 
+table {
+    font-family:Arial, sans-serif ;
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+caption{
+    font-family:Arial, sans-serif;
+    font-size: 1rem;
+    font-style:unset;
+}
+
+td,
+th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+tr:nth-child(even) {
+    background-color: #dddddd;
+} td,
+th {
+    border: 2px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
+
+th:hover{
+    background-color: rgba(155, 150, 150, 0.2);
+}
+
+td:hover{
+    background-color: rgba(155, 150, 150, 0.2);
+}

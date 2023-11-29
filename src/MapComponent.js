@@ -15,6 +15,7 @@ import html2canvas from 'html2canvas';
 import {CameraOutlined} from '@ant-design/icons';
 import { Overlay } from 'ol';
 
+//Koordinatları yuvarlama işlemleri burada yapılıyor.
 
 function decimalDegreesToDMS(decimal) {
 	const degrees = Math.floor(decimal);
@@ -37,6 +38,8 @@ const MapComponent = () => {
 	const polygonButton = document.querySelector('.polygonbtn');
 	const lineButton = document.querySelector('.linebtn')
 	let popups = [];
+
+	
 	
 
 	useEffect(() => {
@@ -83,6 +86,8 @@ const MapComponent = () => {
 		};
 	}, []);
 
+	
+
 	//Popup koordinatları oluşturulur.
 
   	const createPopups = (coordinates) => {
@@ -103,8 +108,15 @@ const MapComponent = () => {
   
     const popupElement = popup.getElement();
     popupElement.className = 'popup';
-    popupElement.innerHTML = `<p>Latitude: ${lat} ${latDirection}<br>Longitude: ${lon} ${lonDirection} <button>Kaydet</button></p>`;
-    popupElement.button = `<button>Kaydet</button>`;
+    popupElement.innerHTML = `
+	<table>
+	<caption>Coordinates</>
+	 <th>Latitude:</th>
+	 <td> ${lat} ${latDirection} </td>
+	<th> Longitude:</th>
+	<td> ${lon} ${lonDirection} </td></table>
+	<button>Kaydet</button>`;
+
   
     map.addOverlay(popup);
 
@@ -277,6 +289,7 @@ const MapComponent = () => {
 			});
 		});
 	};
+
 
   //Haritamızın return edildiği yer butonlarımızın oluşturulup yönetldiği yer
 

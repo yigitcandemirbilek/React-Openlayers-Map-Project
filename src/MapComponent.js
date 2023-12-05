@@ -65,6 +65,13 @@ const MapComponent = () => {
 
 		const vectorLayer = new VectorLayer({
 			source: vectorSource,
+			style: {
+				'fill-color': 'rgba(255, 255, 255, 0.2)',
+				'stroke-color': '#ffcc33',
+				'stroke-width': 2,
+				'circle-radius': 7,
+				'circle-fill-color': '#ffcc33',
+			  },
 		});
 
 		initialMap.addLayer(vectorLayer);
@@ -89,6 +96,7 @@ const MapComponent = () => {
 	
 
 	//Popup koordinatları oluşturulur.
+
 
   	const createPopups = (coordinates) => {
 
@@ -124,15 +132,16 @@ const MapComponent = () => {
 
   };
 
-  const closePopups = () => {
-	popups.forEach((popup) => {
-		map.removeOverlay(popup);
-		
-
-	  });
+  const enablePopupOnClick = () => {
+    map.on('click', (event) => {
+        map.forEachFeatureAtPixel(event.pixel, (feature) => {
+            const coordinates = feature.getGeometry().getCoordinates();
+            createPopups(coordinates); // Tıklanan yerde popup oluştur
+        });
+    });
   };
   
-
+ 
   
   //Polygon tool oluşturuldu.
 
@@ -215,6 +224,8 @@ const MapComponent = () => {
 
 			map.removeInteraction(drawPointInteraction);
         pointButton.disabled = false;
+
+		enablePopupOnClick();
 			
 		});
 
@@ -231,7 +242,7 @@ const MapComponent = () => {
   //toollarımızın kapanması için oluşturulan fonksiyon
 
 	const deactivateDrawTools = () => {
-		closePopups();
+		enablePopupOnClick();
 
 		if (drawPolygonInteraction) {
 			map.removeInteraction(drawPolygonInteraction);
@@ -267,7 +278,7 @@ const MapComponent = () => {
 	const handleClearButtonClick = () => {
 		const vectorSource = map.getLayers().item(1).getSource();
 		vectorSource.clear();
-		closePopups();
+		enablePopupOnClick();
 		deactivateDrawTools();
 	};
 

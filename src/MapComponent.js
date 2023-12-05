@@ -149,6 +149,9 @@ const MapComponent = () => {
 			coordinates.forEach((coordinate) => {
 				createPopups(coordinate);
 			});
+	
+			map.removeInteraction(drawPolygonInteraction);
+			polygonButton.disabled = false;
 		});
 
 		map.addInteraction(drawPolygonInteraction);
@@ -178,6 +181,9 @@ const MapComponent = () => {
         coordinates.forEach(coordinate => {
             createPopups(coordinate);
         });
+
+		map.removeInteraction(drawLineInteraction);
+		lineButton.disabled = false;
     });
 
 		map.addInteraction(drawLineInteraction);
@@ -206,10 +212,17 @@ const MapComponent = () => {
 			const coordinates = event.feature.getGeometry().getCoordinates();
 			console.log("Nokta Koordinatları:", coordinates);
 			createPopups(coordinates);
+
+			map.removeInteraction(drawPointInteraction);
+        pointButton.disabled = false;
+			
 		});
 
 		map.addInteraction(drawPointInteraction);
+
 	};
+
+
 
   //Açılan popupları kapatmak için oluşturulan fonksiyon
 

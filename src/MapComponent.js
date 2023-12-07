@@ -13,16 +13,10 @@ import { Vector as VectorSource } from 'ol/source';
 import { fromLonLat } from 'ol/proj';
 import html2canvas from 'html2canvas';
 import {CameraOutlined} from '@ant-design/icons';
-import { Overlay } from 'ol';
+import Popup from './Popup';
 
-//Koordinatları yuvarlama işlemleri burada yapılıyor.
 
-function decimalDegreesToDMS(decimal) {
-	const degrees = Math.floor(decimal);
-	const minutes = Math.floor((decimal - degrees) * 60);
-	const seconds = ((decimal - degrees - (minutes / 60)) * 3600).toFixed(2);
-	return `${degrees}° ${minutes}' ${seconds}"`;
-  }
+
 
 //Bu MapComponent fonksiyonunda haritamızı getiriyoruz.
 
@@ -38,6 +32,11 @@ const MapComponent = () => {
 	const polygonButton = document.querySelector('.polygonbtn');
 	const lineButton = document.querySelector('.linebtn')
 	let popups = [];
+	const [popupCoordinates, setPopupCoordinates] = useState(null);
+	const createPopups = (coordinates) => {
+        setPopupCoordinates(coordinates);
+    };
+
 
 	
 	
@@ -95,42 +94,9 @@ const MapComponent = () => {
 
 	
 
-	//Popup koordinatları oluşturulur.
 
 
-  	const createPopups = (coordinates) => {
-
-		
-	const lat = decimalDegreesToDMS(coordinates[1]);
-  	const lon = decimalDegreesToDMS(coordinates[0]);
-  	const latDirection = coordinates[1] >= 0 ? 'N' : 'S';
-  	const lonDirection = coordinates[0] >= 0 ? "E" : "W";
-
-
-
-    const popup = new Overlay({
-      position: coordinates,
-      element: document.createElement('div'),
-      stopEvent: false,
-    });
-  
-    const popupElement = popup.getElement();
-    popupElement.className = 'popup';
-    popupElement.innerHTML = `
-	<table>
-	<caption>Coordinates</>
-	 <th>Latitude:</th>
-	 <td> ${lat} ${latDirection} </td>
-	<th> Longitude:</th>
-	<td> ${lon} ${lonDirection} </td></table>
-	<button>Kaydet</button>`;
-
-  
-    map.addOverlay(popup);
-
-	popups.push(popup);
-
-  };
+  	
 
   const enablePopupOnClick = () => {
     map.on('click', (event) => {
@@ -451,6 +417,7 @@ const MapComponent = () => {
 					title="Take a Screenshot">
 					<CameraOutlined />
 				</button>
+				<Popup map={map} coordinates={popupCoordinates} />
 			</div>
 		</div>
 	);

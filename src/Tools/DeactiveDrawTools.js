@@ -20,7 +20,6 @@ export const deactivateDrawTools = (map, drawPolygonInteraction, drawLineInterac
       pointButton.disabled = false;
 		}
     }
-    // Check and deactivate other draw tools as needed
 };
 
 export default deactivateDrawTools;

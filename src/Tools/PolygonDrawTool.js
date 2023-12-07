@@ -7,7 +7,7 @@ const polygonButton = document.querySelector('.polygonbtn');
 
 
 
-const PolygonDrawTool = ({ map, setDrawInteraction, drawPolygonInteraction }) => {
+const PolygonDrawTool = ({ map, drawPolygonInteraction }) => {
     const [popupCoordinates, setPopupCoordinates] = useState(null);
     const createPopup = (coordinates) => {
         setPopupCoordinates(coordinates);
@@ -26,7 +26,6 @@ const PolygonDrawTool = ({ map, setDrawInteraction, drawPolygonInteraction }) =>
 			});
 	
 			map.removeInteraction(drawPolygonInteraction);
-			polygonButton.disabled = false;
 		});
 
 		map.addInteraction(drawPolygonInteraction);

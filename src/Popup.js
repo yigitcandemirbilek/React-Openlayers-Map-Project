@@ -38,14 +38,13 @@ const Popup = ({ map, coordinates }) => {
         map.addOverlay(popup);
     };
 
-    // Popup oluşturulması
     React.useEffect(() => {
         if (map && coordinates) {
             createPopup();
         }
     }, [map, coordinates]);
 
-    return null; // Popup bileşeni ekranda görüntülenmiyor, sadece haritada çalışıyor
+    return null; 
 };
 
 export default Popup;

@@ -25,7 +25,6 @@ const LineDrawTool = ({ map, drawPolygonInteraction }) => {
             });
     
             map.removeInteraction(drawLineInteraction);
-            lineButton.disabled = false;
         });
     
             map.addInteraction(drawLineInteraction);

@@ -3,6 +3,7 @@
 :root {
     --primary-btn-color:rgb(2,32,92) ;
     --primary-hover-btn-color:rgb(0,165,255);
+    --primary-toolbar-background-color:rgb(255,255,255);
 
 }
 
@@ -18,6 +19,8 @@
     background-color: white;
     border-radius: 0.25rem;
     color: white;
+    background-color: var(--primary-toolbar-background-color);
+    border-radius: 1rem;
 }
 
 .toolbar :hover {

@@ -1,5 +1,5 @@
 //İmportlar burada tutuluyor
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState,useRef } from 'react';
 import 'ol/ol.css';
 import './App.css';
 import Map from 'ol/Map';
@@ -16,7 +16,8 @@ import Popup from './Popup';
 import PointDrawTool from './Tools/PointDrawTool';
 import PolygonDrawTool from './Tools/PolygonDrawTool';
 import LineDrawTool from './Tools/LineDrawTool';
-import Tools from './Tools/Toolbar';
+import { Toast } from 'primereact/toast';
+
 
 
 
@@ -28,6 +29,7 @@ const MapComponent = () => {
 	const turkeyCenter = fromLonLat([35.1683, 37.1616]);
 	const [map, setMap] = useState(null);
 	const [popupCoordinates, setPopupCoordinates] = useState(null);
+	const toast = useRef(null);
 	const createPopups = (coordinates) => {
         setPopupCoordinates(coordinates);
     };
@@ -93,6 +95,9 @@ const MapComponent = () => {
 
 	const takeScreenshot = () => {
 		const mapElement = document.getElementById("map");
+		toast.current.show({ severity: 'success', summary: 'Başarılı', detail: 'Ekran Görüntüsü Panoya Kaydedildi.' });
+
+	
 
 		html2canvas(mapElement).then((canvas) => {
 			canvas.toBlob((blob) => {
@@ -116,6 +121,7 @@ const MapComponent = () => {
 	return (
 		<div id="map" style={{ width: "100%", height: "1000px" }}>
 			<div className="toolbar">
+			<div className="toolbar-content">
 			<PointDrawTool map={map} className="pointbtn" />
 			<PolygonDrawTool map={map} className="polygonbtn" />
 			<LineDrawTool map={map} className="linebtn" />
@@ -171,6 +177,7 @@ const MapComponent = () => {
 						/>
 					</svg>
 				</button>
+				
 				<button
 					onClick={takeScreenshot}
 					className="screenshotBtn"
@@ -178,6 +185,8 @@ const MapComponent = () => {
 					<CameraOutlined />
 				</button>
 				<Popup map={map} coordinates={popupCoordinates} />
+			</div>
+			<Toast className='screenshot-toast' ref={toast}></Toast>
 			</div>
 		</div>
 	);

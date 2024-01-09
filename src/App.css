@@ -9,10 +9,17 @@
 
 /* Toolbarın cssleri*/
 
-.toolbar {
+.screenshot-toast {
+    background-color: var(--primary-btn-color);
+    border-radius: 8px;
+    color: white;
+    padding: 1rem;
+}
+
+.toolbar-content {
     position: absolute;
     margin-left:655px;
-    margin-top: 24px;
+    margin-top: 1rem;
     z-index: 99999;
     display: flex;
     gap: 1px;
@@ -23,7 +30,7 @@
     border-radius: 1rem;
 }
 
-.toolbar :hover {
+.toolbar-content :hover {
     background-color: var(--primary-hover-btn-color);
     cursor: pointer;
 }

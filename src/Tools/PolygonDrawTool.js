@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
 import { Draw, Modify, Snap } from 'ol/interaction';
-import {deactivateDrawTools} from './DeactiveDrawTools';
-import Popup from '../Popup';
+
 
 const polygonButton = document.querySelector('.polygonbtn');
 
 
 
 const PolygonDrawTool = ({ map, drawPolygonInteraction }) => {
-    const [popupCoordinates, setPopupCoordinates] = useState(null);
-    const createPopup = (coordinates) => {
-        setPopupCoordinates(coordinates);
-    };
+    
     const activatePolygonDrawTool = () => {
         drawPolygonInteraction = new Draw({
 			source: map.getLayers().item(1).getSource(),
@@ -19,11 +15,7 @@ const PolygonDrawTool = ({ map, drawPolygonInteraction }) => {
 		});
 
 		drawPolygonInteraction.on("drawend", (event) => {
-			const coordinates = event.feature.getGeometry().getCoordinates()[0];
-			console.log("Polygon Koordinatları:", coordinates);
-			coordinates.forEach((coordinate) => {
-				createPopup(coordinate);
-			});
+			
 	
 			map.removeInteraction(drawPolygonInteraction);
 		});
@@ -68,9 +60,7 @@ const PolygonDrawTool = ({ map, drawPolygonInteraction }) => {
 						/>
 					</svg>
         </button>
-        {popupCoordinates && (
-                    <Popup map={map} coordinates={popupCoordinates} />
-                )}
+
         </div>
     );
 };

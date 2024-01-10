@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
 import { Draw, Modify, Snap } from 'ol/interaction';
-import {deactivateDrawTools} from './DeactiveDrawTools';
-import Popup from '../Popup';
+
+
 
 
 let drawLineInteraction;
 const lineButton = document.querySelector('.linebtn')
 
-const LineDrawTool = ({ map, drawPolygonInteraction }) => {
-    const [popupCoordinates, setPopupCoordinates] = useState(null);
-    const createPopup = (coordinates) => {
-        setPopupCoordinates(coordinates);
-    };
+const LineDrawTool = ({ map }) => {
+    
     const activateLineDrawTool = () => {
         drawLineInteraction = new Draw({
                 source: map.getLayers().item(1).getSource(),
@@ -19,10 +16,7 @@ const LineDrawTool = ({ map, drawPolygonInteraction }) => {
             });
     
         drawLineInteraction.on("drawend", (event) => {
-            const coordinates = event.feature.getGeometry().getCoordinates();
-            coordinates.forEach(coordinate => {
-                createPopup(coordinate);
-            });
+           
     
             map.removeInteraction(drawLineInteraction);
         });
@@ -64,9 +58,7 @@ const LineDrawTool = ({ map, drawPolygonInteraction }) => {
 						/>
 					</svg>
 				</button>
-                {popupCoordinates && (
-                    <Popup map={map} coordinates={popupCoordinates} />
-                )}
+
             </div>
         )
 };

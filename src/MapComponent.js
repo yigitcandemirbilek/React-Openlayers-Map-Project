@@ -12,7 +12,6 @@ import { Vector as VectorSource } from 'ol/source';
 import { fromLonLat } from 'ol/proj';
 import html2canvas from 'html2canvas';
 import {CameraOutlined} from '@ant-design/icons';
-import Popup from './Popup';
 import PointDrawTool from './Tools/PointDrawTool';
 import PolygonDrawTool from './Tools/PolygonDrawTool';
 import LineDrawTool from './Tools/LineDrawTool';
@@ -28,12 +27,8 @@ import { Toast } from 'primereact/toast';
 const MapComponent = () => {
 	const turkeyCenter = fromLonLat([35.1683, 37.1616]);
 	const [map, setMap] = useState(null);
-	const [popupCoordinates, setPopupCoordinates] = useState(null);
 	const toast = useRef(null);
-	const createPopups = (coordinates) => {
-        setPopupCoordinates(coordinates);
-    };
-
+	
 
 	
 	
@@ -184,7 +179,6 @@ const MapComponent = () => {
 					title="Take a Screenshot">
 					<CameraOutlined />
 				</button>
-				<Popup map={map} coordinates={popupCoordinates} />
 			</div>
 			<Toast className='screenshot-toast' ref={toast}></Toast>
 			</div>

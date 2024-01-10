@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Draw } from 'ol/interaction';
 import {deactivateDrawTools} from './DeactiveDrawTools';
-import Popup from '../Popup';
+
 
 	const pointButton = document.querySelector('.pointbtn');
 
@@ -11,10 +11,7 @@ import Popup from '../Popup';
 
 
 const PointDrawTool = ({ map, drawPointInteraction }) => {
-    const [popupCoordinates, setPopupCoordinates] = useState(null);
-    const createPopup = (coordinates) => {
-        setPopupCoordinates(coordinates);
-    };
+
 
     const activatePointDrawTool = () => {
 
@@ -25,11 +22,7 @@ const PointDrawTool = ({ map, drawPointInteraction }) => {
 		});
 
 		drawPointInteraction.on("drawend", (event) => {
-			const coordinates = event.feature.getGeometry().getCoordinates();
-			console.log("Nokta Koordinatları:", coordinates);
-            createPopup(coordinates);
-            map.removeInteraction(drawPointInteraction);
-
+			
 			
 		});
 
@@ -59,9 +52,7 @@ const PointDrawTool = ({ map, drawPointInteraction }) => {
 						/>
 					</svg>
 				</button>
-                {popupCoordinates && (
-                    <Popup map={map} coordinates={popupCoordinates} />
-                )}
+
                 </div>
     );
 };

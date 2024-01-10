@@ -211,12 +211,12 @@
     position: absolute;
     background-color: var(--primary-btn-color);
     box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-    padding: 15px;
+    padding: 20px;
     border-radius: 10px;
     border: 1px solid #cccccc;
     bottom: 12px;
     left: -50px;
-    min-width: 280px;
+    min-width: 300px;
     color: white;
 }
 

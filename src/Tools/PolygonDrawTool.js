@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef } from 'react';
+import Overlay from 'ol/Overlay';
 import { Draw, Modify, Snap } from 'ol/interaction';
+import { deactivateDrawTools } from './DeactiveDrawTools';
+import { Polygon } from 'ol/geom';
+import { Feature } from 'ol';
+import { toStringHDMS } from 'ol/coordinate';
 
 
 const polygonButton = document.querySelector('.polygonbtn');
-
-
 
 const PolygonDrawTool = ({ map, drawPolygonInteraction }) => {
     

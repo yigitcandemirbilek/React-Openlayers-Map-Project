@@ -1,42 +1,86 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import Overlay from 'ol/Overlay';
 import { Draw } from 'ol/interaction';
 import { deactivateDrawTools } from './DeactiveDrawTools';
+import { Point } from 'ol/geom';
+import { Feature } from 'ol';
 
 
 	const pointButton = document.querySelector('.pointbtn');
 	
 	const PointDrawTool = ({ map }) => {
 		const drawPointInteraction = useRef(null);
-		const [isDrawing, setIsDrawing] = useState(false);
+		const popupOverlayRef = useRef(null);
+		const isNewPointAdded = useRef(false);
 	
 		const activatePointDrawTool = () => {
-			if (!isDrawing) {
-				deactivateDrawTools();
-				const draw = new Draw({
-					source: map.getLayers().item(1).getSource(),
-					type: 'Point',
-				});
+			deactivateDrawTools();
+			const draw = new Draw({
+				source: map.getLayers().item(1).getSource(),
+				type: 'Point',
+			});
 	
-				draw.on('drawend', () => {
-					setIsDrawing(false);
-					if (drawPointInteraction.current) {
-						map.removeInteraction(drawPointInteraction.current);
-						drawPointInteraction.current = null;
-					}
+			draw.on('drawend', (event) => {
+				isNewPointAdded.current = true;
+				if (drawPointInteraction.current) {
+					map.removeInteraction(drawPointInteraction.current);
+					drawPointInteraction.current = null;
+				}
+				const feature = new Feature({
+					geometry: new Point(event.feature.getGeometry().getCoordinates()),
 				});
+				map.getLayers().item(1).getSource().addFeature(feature);
+			});
 	
-				map.addInteraction(draw);
-				setIsDrawing(true);
-				drawPointInteraction.current = draw;
-			} else {
-				drawPointInteraction.current.finishDrawing();
-				setIsDrawing(false);
-			}
+			map.addInteraction(draw);
+			drawPointInteraction.current = draw;
 		};
+	
+		useEffect(() => {
+			if (!map) return;
+	
+			const popupElement = document.createElement('div');
+			popupElement.className = 'ol-popup';
+	
+			popupOverlayRef.current = new Overlay({
+				element: popupElement,
+				autoPan: true,
+				autoPanAnimation: {
+					duration: 250,
+				},
+			});
+			map.addOverlay(popupOverlayRef.current);
+	
+			const handleMapClick = (event) => {
+				const pixel = map.getEventPixel(event.originalEvent);
+				const coordinate = map.getEventCoordinate(event.originalEvent);
+				const feature = map.forEachFeatureAtPixel(pixel, (feat) => feat);
+	
+				if (feature && feature.getGeometry().getType() === 'Point') {
+					if (!isNewPointAdded.current) {
+						const content = `<p>Coordinates: ${coordinate}</p>`;
+						popupOverlayRef.current.setPosition(coordinate);
+						popupElement.innerHTML = content;
+					} else {
+						isNewPointAdded.current = false;
+					}
+				} else {
+					popupOverlayRef.current.setPosition(undefined);
+				}
+			};
+	
+			map.on('click', handleMapClick);
+	
+			return () => {
+				map.un('click', handleMapClick);
+			};
+		}, [map]);
 	
 		const handlePointDrawButtonClick = () => {
 			activatePointDrawTool();
 		};
+	
+	
 
     return (
         <div>

@@ -1,38 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Draw } from 'ol/interaction';
-import {deactivateDrawTools} from './DeactiveDrawTools';
+import { deactivateDrawTools } from './DeactiveDrawTools';
 
 
 	const pointButton = document.querySelector('.pointbtn');
-
-
-
-
-
-
-const PointDrawTool = ({ map, drawPointInteraction }) => {
-
-
-    const activatePointDrawTool = () => {
-
-        deactivateDrawTools();
-		drawPointInteraction = new Draw({
-			source: map.getLayers().item(1).getSource(),
-			type: "Point",
-		});
-
-		drawPointInteraction.on("drawend", (event) => {
-			
-			
-		});
-
-		map.addInteraction(drawPointInteraction);
-    };
-
-    const handlePointDrawButtonClick = () => {
-		activatePointDrawTool();
-    
-	};
+	
+	const PointDrawTool = ({ map }) => {
+		const drawPointInteraction = useRef(null);
+		const [isDrawing, setIsDrawing] = useState(false);
+	
+		const activatePointDrawTool = () => {
+			if (!isDrawing) {
+				deactivateDrawTools();
+				const draw = new Draw({
+					source: map.getLayers().item(1).getSource(),
+					type: 'Point',
+				});
+	
+				draw.on('drawend', () => {
+					setIsDrawing(false);
+					if (drawPointInteraction.current) {
+						map.removeInteraction(drawPointInteraction.current);
+						drawPointInteraction.current = null;
+					}
+				});
+	
+				map.addInteraction(draw);
+				setIsDrawing(true);
+				drawPointInteraction.current = draw;
+			} else {
+				drawPointInteraction.current.finishDrawing();
+				setIsDrawing(false);
+			}
+		};
+	
+		const handlePointDrawButtonClick = () => {
+			activatePointDrawTool();
+		};
 
     return (
         <div>
@@ -52,7 +56,6 @@ const PointDrawTool = ({ map, drawPointInteraction }) => {
 						/>
 					</svg>
 				</button>
-
                 </div>
     );
 };

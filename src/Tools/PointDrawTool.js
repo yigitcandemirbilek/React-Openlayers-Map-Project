@@ -39,6 +39,39 @@ import { toStringHDMS } from 'ol/coordinate';
 			drawPointInteraction.current = draw;
 		};
 	
+		const handleMapClick = (event) => {
+			const pixel = map.getEventPixel(event.originalEvent);
+			const coordinate = map.getEventCoordinate(event.originalEvent);
+			const feature = map.forEachFeatureAtPixel(pixel, (feat) => feat);
+	
+			if (feature && feature.getGeometry().getType() === 'Point') {
+				const clickedPointCoord = feature.getGeometry().getCoordinates();
+				if (!isNewPointAdded.current) {
+					const currentPopupCoord = popupOverlayRef.current.getPosition();
+					if (
+						currentPopupCoord &&
+						currentPopupCoord[0] === clickedPointCoord[0] &&
+						currentPopupCoord[1] === clickedPointCoord[1]
+					) {
+						// Aynı noktaya tıklandı, yeni bir popup oluşturma
+						isNewPointAdded.current = false;
+						return;
+					}
+					popupOverlayRef.current.setPosition(coordinate);
+	
+					const content = document.createElement('p');
+					content.innerHTML = `Koordinatlar: ${toStringHDMS(coordinate)}`;
+					popupOverlayRef.current.getElement().innerHTML = ''; // Önceki içeriği temizle
+					popupOverlayRef.current.getElement().appendChild(closerRef.current);
+					popupOverlayRef.current.getElement().appendChild(content);
+				} else {
+					isNewPointAdded.current = false;
+				}
+			} else {
+				popupOverlayRef.current.setPosition(undefined);
+			}
+		};
+	
 		useEffect(() => {
 			if (!map) return;
 	
@@ -62,26 +95,6 @@ import { toStringHDMS } from 'ol/coordinate';
 				return false;
 			};
 			popupElement.appendChild(closerRef.current); // Popup içeriğine kapatma düğmesini ekle
-	
-			const handleMapClick = (event) => {
-				const pixel = map.getEventPixel(event.originalEvent);
-				const coordinate = map.getEventCoordinate(event.originalEvent);
-				const feature = map.forEachFeatureAtPixel(pixel, (feat) => feat);
-	
-				if (feature && feature.getGeometry().getType() === 'Point') {
-					if (!isNewPointAdded.current) {
-						popupOverlayRef.current.setPosition(coordinate);
-	
-						const content = document.createElement('p');
-						content.innerHTML = `Coordinates: ${toStringHDMS(coordinate)}`; // Koordinatları içeren paragraf
-						popupElement.appendChild(content); // Popup içeriğine koordinatları ekle
-					} else {
-						isNewPointAdded.current = false;
-					}
-				} else {
-					popupOverlayRef.current.setPosition(undefined); // Popup'ı gizle
-				}
-			};
 	
 			map.on('click', handleMapClick);
 	

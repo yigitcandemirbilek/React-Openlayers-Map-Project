@@ -1,42 +1,98 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef } from 'react';
+import Overlay from 'ol/Overlay';
 import { Draw, Modify, Snap } from 'ol/interaction';
+import { deactivateDrawTools } from './DeactiveDrawTools';
+import { LineString } from 'ol/geom';
+import { Feature } from 'ol';
+import { toStringHDMS } from 'ol/coordinate';
 
 
 
 
 let drawLineInteraction;
-const lineButton = document.querySelector('.linebtn')
-
 const LineDrawTool = ({ map }) => {
-    
+    const popupOverlayRef = useRef(null);
+    const isNewLineAdded = useRef(false);
+
+    let drawLineInteraction;
+
     const activateLineDrawTool = () => {
+        deactivateDrawTools();
         drawLineInteraction = new Draw({
-                source: map.getLayers().item(1).getSource(),
-                type: "LineString",
-            });
-    
-        drawLineInteraction.on("drawend", (event) => {
-           
-    
-            map.removeInteraction(drawLineInteraction);
+            source: map.getLayers().item(1).getSource(),
+            type: 'LineString',
         });
-    
-            map.addInteraction(drawLineInteraction);
-    
-            const modifyInteraction = new Modify({
-                source: map.getLayers().item(1).getSource(),
+
+        drawLineInteraction.on('drawend', (event) => {
+            isNewLineAdded.current = true;
+            map.removeInteraction(drawLineInteraction);
+
+            const feature = new Feature({
+                geometry: new LineString(event.feature.getGeometry().getCoordinates()),
             });
-            map.addInteraction(modifyInteraction);
-    
-            const snapInteraction = new Snap({
-                source: map.getLayers().item(1).getSource(),
-            });
-            map.addInteraction(snapInteraction);
+            map.getLayers().item(1).getSource().addFeature(feature);
+        });
+
+        map.addInteraction(drawLineInteraction);
+
+        const modifyInteraction = new Modify({
+            source: map.getLayers().item(1).getSource(),
+        });
+        map.addInteraction(modifyInteraction);
+
+        const snapInteraction = new Snap({
+            source: map.getLayers().item(1).getSource(),
+        });
+        map.addInteraction(snapInteraction);
+    };
+
+    useEffect(() => {
+        if (!map) return;
+
+        const popupElement = document.createElement('div');
+        popupElement.className = 'ol-popup';
+
+        popupOverlayRef.current = new Overlay({
+            element: popupElement,
+            autoPan: true,
+            autoPanAnimation: {
+                duration: 250,
+            },
+        });
+        map.addOverlay(popupOverlayRef.current);
+
+        const handleMapClick = (event) => {
+            const pixel = map.getEventPixel(event.originalEvent);
+            const coordinate = map.getEventCoordinate(event.originalEvent);
+            const feature = map.forEachFeatureAtPixel(pixel, (feat) => feat);
+
+            if (feature && feature.getGeometry().getType() === 'LineString') {
+                if (!isNewLineAdded.current) {
+                    popupOverlayRef.current.setPosition(coordinate);
+
+                    const content = document.createElement('p');
+                    content.innerHTML = `Line Coordinates: ${JSON.stringify(feature.getGeometry().getCoordinates())}`; // Çizginin koordinatlarını içeren paragraf
+                    popupElement.innerHTML = ''; // Önceki içeriği temizle
+                    popupElement.appendChild(content); // Popup içeriğine çizgi koordinatlarını ekle
+                } else {
+                    isNewLineAdded.current = false;
+                }
+            } else {
+                popupOverlayRef.current.setPosition(undefined); // Popup'ı gizle
+            }
         };
 
-        const handleLineDrawButtonClick = () => {
-            activateLineDrawTool();
+        map.on('click', handleMapClick);
+
+        return () => {
+            map.un('click', handleMapClick);
         };
+    }, [map]);
+
+    const handleLineDrawButtonClick = () => {
+        activateLineDrawTool();
+    };
+
 
         return (
             <div>

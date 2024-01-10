@@ -4,6 +4,7 @@ import { Draw } from 'ol/interaction';
 import { deactivateDrawTools } from './DeactiveDrawTools';
 import { Point } from 'ol/geom';
 import { Feature } from 'ol';
+import { toStringHDMS } from 'ol/coordinate';
 
 
 	const pointButton = document.querySelector('.pointbtn');
@@ -58,7 +59,8 @@ import { Feature } from 'ol';
 	
 				if (feature && feature.getGeometry().getType() === 'Point') {
 					if (!isNewPointAdded.current) {
-						const content = `<p>Coordinates: ${coordinate}</p>`;
+						const formattedCoordinate = toStringHDMS(coordinate); // veya toStringXY kullanabilirsiniz
+						const content = `<p>Coordinates: ${formattedCoordinate}</p>`;
 						popupOverlayRef.current.setPosition(coordinate);
 						popupElement.innerHTML = content;
 					} else {

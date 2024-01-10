@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
+import '../App.css';
 import Overlay from 'ol/Overlay';
 import { Draw } from 'ol/interaction';
 import { deactivateDrawTools } from './DeactiveDrawTools';
@@ -13,6 +14,7 @@ import { toStringHDMS } from 'ol/coordinate';
 		const drawPointInteraction = useRef(null);
 		const popupOverlayRef = useRef(null);
 		const isNewPointAdded = useRef(false);
+		const closerRef = useRef(null);
 	
 		const activatePointDrawTool = () => {
 			deactivateDrawTools();
@@ -52,6 +54,15 @@ import { toStringHDMS } from 'ol/coordinate';
 			});
 			map.addOverlay(popupOverlayRef.current);
 	
+			closerRef.current = document.createElement('a');
+			closerRef.current.href = '#';
+			closerRef.current.className = 'ol-popup-closer';
+			closerRef.current.onclick = () => {
+				popupOverlayRef.current.setPosition(undefined); // Popup'ı gizle
+				return false;
+			};
+			popupElement.appendChild(closerRef.current); // Popup içeriğine kapatma düğmesini ekle
+	
 			const handleMapClick = (event) => {
 				const pixel = map.getEventPixel(event.originalEvent);
 				const coordinate = map.getEventCoordinate(event.originalEvent);
@@ -59,15 +70,16 @@ import { toStringHDMS } from 'ol/coordinate';
 	
 				if (feature && feature.getGeometry().getType() === 'Point') {
 					if (!isNewPointAdded.current) {
-						const formattedCoordinate = toStringHDMS(coordinate); // veya toStringXY kullanabilirsiniz
-						const content = `<p>Coordinates: ${formattedCoordinate}</p>`;
 						popupOverlayRef.current.setPosition(coordinate);
-						popupElement.innerHTML = content;
+	
+						const content = document.createElement('p');
+						content.innerHTML = `Coordinates: ${toStringHDMS(coordinate)}`; // Koordinatları içeren paragraf
+						popupElement.appendChild(content); // Popup içeriğine koordinatları ekle
 					} else {
 						isNewPointAdded.current = false;
 					}
 				} else {
-					popupOverlayRef.current.setPosition(undefined);
+					popupOverlayRef.current.setPosition(undefined); // Popup'ı gizle
 				}
 			};
 	

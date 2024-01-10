@@ -207,9 +207,9 @@
 
 /* Popupların cssleri */
 
-.popup{
+.ol-popup{
     position: absolute;
-    background-color: white;
+    background-color: var(--primary-btn-color);
     box-shadow: 0 1px 4px rgba(0,0,0,0.2);
     padding: 15px;
     border-radius: 10px;
@@ -217,79 +217,37 @@
     bottom: 12px;
     left: -50px;
     min-width: 280px;
+    color: white;
 }
 
-.popup::after, .popup::before{
+.ol-popup:after, .ol-popup:before {
     top: 100%;
-        border: solid transparent;
-        content: " ";
-        height: 0;
-        width: 0;
-        position: absolute;
-        pointer-events: none;
-}
-
-.popup::after{
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+  }
+  .ol-popup:after {
     border-top-color: white;
-        border-width: 10px;
-        left: 48px;
-        margin-left: -10px;
-}
-
-.popup::before{
+    border-width: 10px;
+    left: 48px;
+    margin-left: -10px;
+  }
+  .ol-popup:before {
     border-top-color: #cccccc;
     border-width: 11px;
     left: 48px;
     margin-left: -11px;
-}
-
-.popup button {
-    background-color: var(--primary-btn-color);
-    color: white; 
-    border-radius: 12%;
-}
-
-.popup button:hover {
-    background-color: var(--primary-hover-btn-color);
-    cursor: pointer;
-}
-
-
-table {
-    font-family:Arial, sans-serif ;
-    border-collapse: collapse;
-    width: 100%;
-    font-size: 0.9rem;
-}
-
-caption{
-    font-family:Arial, sans-serif;
-    font-size: 1rem;
-    font-style:unset;
-}
-
-td,
-th {
-    border: 1px solid #dddddd;
-    text-align: left;
-    padding: 8px;
-}
-tr:nth-child(even) {
-    background-color: #dddddd;
-} td,
-th {
-    border: 2px solid #dddddd;
-    text-align: left;
-    padding: 8px;
-}
-tr:nth-child(even) {
-    background-color: #dddddd;
-}
-
-th:hover{
-    background-color: rgba(155, 150, 150, 0.2);
-}
-
-td:hover{
-    background-color: rgba(155, 150, 150, 0.2);
-}
+  }
+  .ol-popup-closer {
+    text-decoration: none;
+    position: absolute;
+    top: 2px;
+    right: 8px;
+    color: white;
+  }
+  .ol-popup-closer:after {
+    content: "✖";
+  }

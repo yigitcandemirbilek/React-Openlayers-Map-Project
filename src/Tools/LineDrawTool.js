@@ -3,16 +3,14 @@ import Overlay from 'ol/Overlay';
 import { Draw, Modify, Snap } from 'ol/interaction';
 import { deactivateDrawTools } from './DeactiveDrawTools';
 import { LineString } from 'ol/geom';
+import { getLength } from 'ol/sphere';
 import { Feature } from 'ol';
 import { toStringHDMS } from 'ol/coordinate';
 
-
-
-
-let drawLineInteraction;
 const LineDrawTool = ({ map }) => {
     const popupOverlayRef = useRef(null);
     const isNewLineAdded = useRef(false);
+    const measureTooltipRef = useRef(null);
 
     let drawLineInteraction;
 
@@ -23,8 +21,38 @@ const LineDrawTool = ({ map }) => {
             type: 'LineString',
         });
 
+        const sketch = new Feature();
+        let tooltipCoord;
+
+        drawLineInteraction.on('drawstart', (event) => {
+            isNewLineAdded.current = false;
+            map.removeOverlay(measureTooltipRef.current);
+
+            const tooltipElement = document.createElement('div');
+            tooltipElement.className = 'ol-tooltip ol-tooltip-measure';
+            measureTooltipRef.current = new Overlay({
+                element: tooltipElement,
+                offset: [0, -15],
+                positioning: 'bottom-center',
+            });
+            map.addOverlay(measureTooltipRef.current);
+
+            event.feature.on('change', (evt) => {
+                const geom = evt.target.getGeometry();
+                const length = getLength(geom, {
+                    projection: map.getView().getProjection(),
+                    radius: 6371, // Dünya'nın yarıçapı (örneğin, kilometre cinsinden)
+                });
+                const output = `${length.toFixed(2)} km`;
+                tooltipCoord = geom.getLastCoordinate();
+                tooltipElement.innerHTML = `<span>${output}</span>`;
+                measureTooltipRef.current.setPosition(tooltipCoord);
+            });
+        });
+
         drawLineInteraction.on('drawend', (event) => {
             isNewLineAdded.current = true;
+            map.removeOverlay(measureTooltipRef.current);
             map.removeInteraction(drawLineInteraction);
 
             const feature = new Feature({
@@ -71,14 +99,17 @@ const LineDrawTool = ({ map }) => {
                     popupOverlayRef.current.setPosition(coordinate);
 
                     const content = document.createElement('p');
-                    content.innerHTML = `Line Coordinates: ${JSON.stringify(feature.getGeometry().getCoordinates())}`; // Çizginin koordinatlarını içeren paragraf
-                    popupElement.innerHTML = ''; // Önceki içeriği temizle
-                    popupElement.appendChild(content); // Popup içeriğine çizgi koordinatlarını ekle
+                    content.innerHTML = `Çizgi Uzunluğu: ${getLength(
+                        feature.getGeometry(),
+                        { projection: map.getView().getProjection(), radius: 6371 }
+                    ).toFixed(2)} km`;
+                    popupElement.innerHTML = '';
+                    popupElement.appendChild(content);
                 } else {
                     isNewLineAdded.current = false;
                 }
             } else {
-                popupOverlayRef.current.setPosition(undefined); // Popup'ı gizle
+                popupOverlayRef.current.setPosition(undefined);
             }
         };
 
@@ -93,30 +124,28 @@ const LineDrawTool = ({ map }) => {
         activateLineDrawTool();
     };
 
-
-        return (
-            <div>
-               <button
-					onClick={handleLineDrawButtonClick}
-					className="linebtn"
-					title="Line Tool">
-					<svg
-						width="24"
-						height="24"
-						viewBox="0 0 24 24"
-						fill="none"
-						xmlns="http://www.w3.org/2000/svg">
-						<path
-							fillRule="evenodd"
-							clipRule="evenodd"
-							d="M21 6H21.046L15.796 15H14.852L10 9.455V7H7V9.926L1.862 18H0V21H3V18.074L8.138 10H9.148L14 15.545V18H17V15H16.954L22.204 6H24V3H21V6ZM8 8H9V9H8V8ZM2 20H1V19H2V20ZM16 17H15V16H16V17ZM23 4V5H22V4H23Z"
-							fill="white"
-						/>
-					</svg>
-				</button>
-
-            </div>
-        )
+    return (
+        <div>
+            <button
+                onClick={handleLineDrawButtonClick}
+                className="linebtn"
+                title="Çizgi Aracı">
+                <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M21 6H21.046L15.796 15H14.852L10 9.455V7H7V9.926L1.862 18H0V21H3V18.074L8.138 10H9.148L14 15.545V18H17V15H16.954L22.204 6H24V3H21V6ZM8 8H9V9H8V8ZM2 20H1V19H2V20ZM16 17H15V16H16V17ZM23 4V5H22V4H23Z"
+                        fill="white"
+                    />
+                </svg>
+            </button>
+        </div>
+    );
 };
 
 export default LineDrawTool;

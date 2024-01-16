@@ -1,4 +1,4 @@
-/* Global olarak bazı renkler atandı*/
+/* Bir çok yerde kullanacağımız renkleri burada bir değişken vasıtasıyla tuttuk.*/
 
 :root {
     --primary-btn-color:rgb(2,32,92) ;
@@ -135,25 +135,6 @@
     display: block;
 }
 
-/*Dragpan button cssleri */
-
-.dragbtn{
-    display: inline-flex;
-    padding: 0.3125rem;
-    justify-content: center;
-    align-items: center;
-    gap: 0.625rem;
-    border-radius: 0rem 0.25rem 0.25rem 0rem;
-    border: 1px solid #3764BE;
-    
-    background: var(--primary-btn-color);
-    
-}
-
-.dragbtn[title]:hover::after{
-    content: attr(title);
-    display: block;
-}
 
 /*Screenshot button cssleri */
 

@@ -6,6 +6,8 @@ import { Polygon } from 'ol/geom';
 import { Feature } from 'ol';
 import { toStringHDMS } from 'ol/coordinate';
 
+//Polygon çizme aracının ve popupının oluşturulduğu fonksiyon.
+
 
 const polygonButton = document.querySelector('.polygonbtn');
 
@@ -35,6 +37,8 @@ const PolygonDrawTool = ({ map, drawPolygonInteraction }) => {
 		});
 		map.addInteraction(snapInteraction);
         };
+
+		//Butonumuzun click eventi burada oluşturuldu.
 
         const handlePolygonDrawButtonClick = () => {
             activatePolygonDrawTool();

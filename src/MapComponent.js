@@ -42,7 +42,7 @@ const MapComponent = () => {
 				}),
 			],
 
-      // Bu kısımda haritamız açıldığında nereye fokuslanmasını gerektiğini yazdık.
+      // Bu kısımda haritamız açıldığında nereye fokuslanmasını istediğimizi yazdık.
 
 			view: new View({
 				center: turkeyCenter,
@@ -77,16 +77,22 @@ const MapComponent = () => {
 		};
 	}, []);
 
+	//Temizleme butonumuz tıklama eventini burada oluşturuyoruz.
+
 	const handleClearButtonClick = () => {
 		const vectorSource = map.getLayers().item(1).getSource();
 		vectorSource.clear();
 	};
+
+	//Resetleme butonumuzun tıklama eventini de burada oluşturuyoruz.
 
 	const handleResetViewButtonClick = () => {
 		const defaultView = map.getView();
 		defaultView.setCenter(turkeyCenter);
 		defaultView.setZoom(6.6);
 	};
+
+	//Burada haritamızın ekran görüntüsü alması için bir fonksiyon oluşturduk.
 
 	const takeScreenshot = () => {
 		const mapElement = document.getElementById("map");
@@ -111,7 +117,7 @@ const MapComponent = () => {
 	};
 
 
-  //Haritamızın return edildiği yer butonlarımızın oluşturulup yönetldiği yer
+  //Haritamızın return edildiği yer butonlarımızın oluşturulup diğer componentlerin çağırılıp çalıştırıldığı yer.
 
 	return (
 		<div id="map" style={{ width: "100%", height: "1000px" }}>

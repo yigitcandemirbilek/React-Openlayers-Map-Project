@@ -7,6 +7,8 @@ import { Point } from 'ol/geom';
 import { Feature } from 'ol';
 import { toStringHDMS } from 'ol/coordinate';
 
+//Nokta çizme aracımız burada oluşturuldu ayrıca popupının oluşturulduğu fonksiyon..
+
 
 	const pointButton = document.querySelector('.pointbtn');
 	
@@ -53,7 +55,7 @@ import { toStringHDMS } from 'ol/coordinate';
 						currentPopupCoord[0] === clickedPointCoord[0] &&
 						currentPopupCoord[1] === clickedPointCoord[1]
 					) {
-						// Aynı noktaya tıklandı, yeni bir popup oluşturma
+						
 						isNewPointAdded.current = false;
 						return;
 					}
@@ -61,7 +63,7 @@ import { toStringHDMS } from 'ol/coordinate';
 	
 					const content = document.createElement('p');
 					content.innerHTML = `Koordinatlar: ${toStringHDMS(coordinate)}`;
-					popupOverlayRef.current.getElement().innerHTML = ''; // Önceki içeriği temizle
+					popupOverlayRef.current.getElement().innerHTML = ''; 
 					popupOverlayRef.current.getElement().appendChild(closerRef.current);
 					popupOverlayRef.current.getElement().appendChild(content);
 				} else {
@@ -91,10 +93,10 @@ import { toStringHDMS } from 'ol/coordinate';
 			closerRef.current.href = '#';
 			closerRef.current.className = 'ol-popup-closer';
 			closerRef.current.onclick = () => {
-				popupOverlayRef.current.setPosition(undefined); // Popup'ı gizle
+				popupOverlayRef.current.setPosition(undefined); 
 				return false;
 			};
-			popupElement.appendChild(closerRef.current); // Popup içeriğine kapatma düğmesini ekle
+			popupElement.appendChild(closerRef.current); 
 	
 			map.on('click', handleMapClick);
 	
@@ -102,6 +104,8 @@ import { toStringHDMS } from 'ol/coordinate';
 				map.un('click', handleMapClick);
 			};
 		}, [map]);
+
+		//Butonumuzun click eventinin oluşturulduğu yer.
 	
 		const handlePointDrawButtonClick = () => {
 			activatePointDrawTool();

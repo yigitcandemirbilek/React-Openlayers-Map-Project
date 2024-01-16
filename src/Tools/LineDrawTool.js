@@ -7,6 +7,8 @@ import { getLength } from 'ol/sphere';
 import { Feature } from 'ol';
 import { toStringHDMS } from 'ol/coordinate';
 
+//Çizim aracımızın fonksiyonu ve km hesaplama fonksiyonu burada tutuluyor.
+
 const LineDrawTool = ({ map }) => {
     const popupOverlayRef = useRef(null);
     const isNewLineAdded = useRef(false);
@@ -120,9 +122,13 @@ const LineDrawTool = ({ map }) => {
         };
     }, [map]);
 
+    //Çizgi çizme aracının butounun click eventi burada oluşturuldu.
+
     const handleLineDrawButtonClick = () => {
         activateLineDrawTool();
     };
+
+    //Çizim aracımızın return edildiği yer.
 
     return (
         <div>

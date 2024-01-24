@@ -11,9 +11,12 @@ const PointDrawTool = ({ map }) => {
   const popupOverlayRef = useRef(null);
   const isNewPointAdded = useRef(false);
   const closerRef = useRef(null);
+  const preventPopup = useRef(false); 
+  const isPointDrawToolActive = useRef(false); // Nokta çizme aracının aktif olup olmadığını takip eden ref
 
   const activatePointDrawTool = () => {
     deactivateDrawTools();
+    isPointDrawToolActive.current = true; // Nokta çizme aracı aktif hale getirildi
     const draw = new Draw({
       source: map.getLayers().item(1).getSource(),
       type: 'Point',
@@ -26,16 +29,15 @@ const PointDrawTool = ({ map }) => {
         drawPointInteraction.current = null;
       }
 
-      // Koordinatları geometri koordinatlarına çevirme
-      const pointGeometry = new Point(
-        event.feature.getGeometry().getCoordinates()
-      );
+      const pointCoordinates = event.feature.getGeometry().getCoordinates();
+      const pointGeometry = new Point(pointCoordinates);
 
       const feature = new Feature({
         geometry: pointGeometry,
       });
 
       map.getLayers().item(1).getSource().addFeature(feature);
+      preventPopup.current = true; 
     });
 
     map.addInteraction(draw);
@@ -43,6 +45,16 @@ const PointDrawTool = ({ map }) => {
   };
 
   const handleMapClick = (event) => {
+    if (preventPopup.current) {
+      preventPopup.current = false;
+      return;
+    }
+
+    // Nokta çizme aracı aktif değilse popup gösterme
+    if (!isPointDrawToolActive.current) {
+      return;
+    }
+
     const pixel = map.getEventPixel(event.originalEvent);
     const coordinate = map.getEventCoordinate(event.originalEvent);
     const feature = map.forEachFeatureAtPixel(pixel, (feat) => feat);
@@ -60,13 +72,13 @@ const PointDrawTool = ({ map }) => {
           return;
         }
 
-        // Harita projeksiyonunu WGS84'e dönüştür
         const wgs84Coordinate = transform(coordinate, 'EPSG:3857', 'EPSG:4326');
+        const coordinatesText = `${wgs84Coordinate[1]}, ${wgs84Coordinate[0]}`;
 
         popupOverlayRef.current.setPosition(coordinate);
 
         const content = document.createElement('p');
-        content.innerHTML = `Koordinatlar: ${wgs84Coordinate[1]}, ${wgs84Coordinate[0]}`;
+        content.innerHTML = `Koordinatlar: ${coordinatesText}`;
         popupOverlayRef.current.getElement().innerHTML = '';
         popupOverlayRef.current.getElement().appendChild(closerRef.current);
         popupOverlayRef.current.getElement().appendChild(content);

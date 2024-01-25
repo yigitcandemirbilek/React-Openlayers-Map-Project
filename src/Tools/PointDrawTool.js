@@ -9,9 +9,7 @@ import { transform } from 'ol/proj';
 const PointDrawTool = ({ map }) => {
   const drawPointInteraction = useRef(null);
   const popupOverlayRef = useRef(null);
-  const isNewPointAdded = useRef(false);
   const closerRef = useRef(null);
-  const preventPopup = useRef(false); // Yeni bir ref ekledik
 
   const activatePointDrawTool = () => {
     deactivateDrawTools();
@@ -21,7 +19,6 @@ const PointDrawTool = ({ map }) => {
     });
 
     draw.on('drawend', (event) => {
-      isNewPointAdded.current = true;
       if (drawPointInteraction.current) {
         map.removeInteraction(drawPointInteraction.current);
         drawPointInteraction.current = null;
@@ -35,7 +32,12 @@ const PointDrawTool = ({ map }) => {
       });
 
       map.getLayers().item(1).getSource().addFeature(feature);
-      preventPopup.current = true; // Çizim tamamlandığında pop-up'ı engelle
+
+      // Geçici olarak 'drawend' olayını devre dışı bırak
+      map.un('click', handleMapClick);
+      setTimeout(() => {
+        map.on('click', handleMapClick);
+      }, 0);
     });
 
     map.addInteraction(draw);
@@ -43,41 +45,23 @@ const PointDrawTool = ({ map }) => {
   };
 
   const handleMapClick = (event) => {
-    if (preventPopup.current) {
-      preventPopup.current = false;
-      return;
-    }
-
     const pixel = map.getEventPixel(event.originalEvent);
     const coordinate = map.getEventCoordinate(event.originalEvent);
     const feature = map.forEachFeatureAtPixel(pixel, (feat) => feat);
 
     if (feature && feature.getGeometry().getType() === 'Point') {
       const clickedPointCoord = feature.getGeometry().getCoordinates();
-      if (!isNewPointAdded.current) {
-        const currentPopupCoord = popupOverlayRef.current.getPosition();
-        if (
-          currentPopupCoord &&
-          currentPopupCoord[0] === clickedPointCoord[0] &&
-          currentPopupCoord[1] === clickedPointCoord[1]
-        ) {
-          isNewPointAdded.current = false;
-          return;
-        }
 
-        const wgs84Coordinate = transform(coordinate, 'EPSG:3857', 'EPSG:4326');
-        const coordinatesText = `${wgs84Coordinate[1]}, ${wgs84Coordinate[0]}`;
+      const wgs84Coordinate = transform(coordinate, 'EPSG:3857', 'EPSG:4326');
+      const coordinatesText = `${wgs84Coordinate[1]}, ${wgs84Coordinate[0]}`;
 
-        popupOverlayRef.current.setPosition(coordinate);
+      popupOverlayRef.current.setPosition(coordinate);
 
-        const content = document.createElement('p');
-        content.innerHTML = `Koordinatlar: ${coordinatesText}`;
-        popupOverlayRef.current.getElement().innerHTML = '';
-        popupOverlayRef.current.getElement().appendChild(closerRef.current);
-        popupOverlayRef.current.getElement().appendChild(content);
-      } else {
-        isNewPointAdded.current = false;
-      }
+      const content = document.createElement('p');
+      content.innerHTML = `Koordinatlar: ${coordinatesText}`;
+      popupOverlayRef.current.getElement().innerHTML = '';
+      popupOverlayRef.current.getElement().appendChild(closerRef.current);
+      popupOverlayRef.current.getElement().appendChild(content);
     } else {
       popupOverlayRef.current.setPosition(undefined);
     }

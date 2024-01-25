@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import Overlay from 'ol/Overlay';
 import { Draw } from 'ol/interaction';
 import { deactivateDrawTools } from './DeactiveDrawTools';
@@ -7,30 +7,40 @@ import { Feature } from 'ol';
 import { transform } from 'ol/proj';
 
 const PointDrawTool = ({ map }) => {
+  // Referansları tut
   const drawPointInteraction = useRef(null);
   const popupOverlayRef = useRef(null);
   const closerRef = useRef(null);
 
+  // Nokta çizim aracını aktive etmek için kullanılan fonksiyon
   const activatePointDrawTool = () => {
+    // Diğer çizim araçlarını devre dışı bırak
     deactivateDrawTools();
+
+    // Nokta çizim aracını oluştur
     const draw = new Draw({
-      source: map.getLayers().item(1).getSource(),
-      type: 'Point',
+      source: map.getLayers().item(1).getSource(), // Harita kaynağına erişim
+      type: 'Point', // Nokta çizim türü
     });
 
+    // Çizim tamamlandığında çalışacak olan olay dinleyicisi
     draw.on('drawend', (event) => {
+      // Eğer daha önce bir çizim aracı aktive edilmişse onu kaldır
       if (drawPointInteraction.current) {
         map.removeInteraction(drawPointInteraction.current);
         drawPointInteraction.current = null;
       }
 
+      // Çizilen noktanın koordinatlarını al
       const pointCoordinates = event.feature.getGeometry().getCoordinates();
       const pointGeometry = new Point(pointCoordinates);
 
+      // Nokta geometrisini içeren bir feature oluştur
       const feature = new Feature({
         geometry: pointGeometry,
       });
 
+      // Harita kaynağına nokta özelliğini ekle
       map.getLayers().item(1).getSource().addFeature(feature);
 
       // Geçici olarak 'drawend' olayını devre dışı bırak
@@ -40,18 +50,19 @@ const PointDrawTool = ({ map }) => {
       }, 0);
     });
 
+    // Çizim aracını haritaya ekle
     map.addInteraction(draw);
     drawPointInteraction.current = draw;
   };
 
-  const handleMapClick = (event) => {
+  // Harita üzerinde tıklama olayını ele alan fonksiyon
+  const handleMapClick = useCallback((event) => {
     const pixel = map.getEventPixel(event.originalEvent);
     const coordinate = map.getEventCoordinate(event.originalEvent);
     const feature = map.forEachFeatureAtPixel(pixel, (feat) => feat);
 
     if (feature && feature.getGeometry().getType() === 'Point') {
-      const clickedPointCoord = feature.getGeometry().getCoordinates();
-
+      // Eğer tıklanan özellik bir noktaysa, popup göster
       const wgs84Coordinate = transform(coordinate, 'EPSG:3857', 'EPSG:4326');
       const coordinatesText = `${wgs84Coordinate[1]}, ${wgs84Coordinate[0]}`;
 
@@ -63,16 +74,20 @@ const PointDrawTool = ({ map }) => {
       popupOverlayRef.current.getElement().appendChild(closerRef.current);
       popupOverlayRef.current.getElement().appendChild(content);
     } else {
+      // Eğer tıklanan özellik bir nokta değilse, popup'ı kapat
       popupOverlayRef.current.setPosition(undefined);
     }
-  };
+  }, [map, popupOverlayRef, closerRef, transform]); 
 
+  // Komponent yüklendiğinde ve harita değiştiğinde çalışan etkileşimler
   useEffect(() => {
     if (!map) return;
 
+    // Popup için HTML tagi oluştur
     const popupElement = document.createElement('div');
     popupElement.className = 'ol-popup';
 
+    // Overlay oluştur ve haritaya ekle
     popupOverlayRef.current = new Overlay({
       element: popupElement,
       autoPan: true,
@@ -82,6 +97,7 @@ const PointDrawTool = ({ map }) => {
     });
     map.addOverlay(popupOverlayRef.current);
 
+    // Popupı kapatmak için closer tag
     closerRef.current = document.createElement('a');
     closerRef.current.href = '#';
     closerRef.current.className = 'ol-popup-closer';
@@ -91,17 +107,21 @@ const PointDrawTool = ({ map }) => {
     };
     popupElement.appendChild(closerRef.current);
 
+    // Harita üzerinde tıklama olayını dinle
     map.on('click', handleMapClick);
 
+    // Komponent kaldırıldığında temizlik yap
     return () => {
       map.un('click', handleMapClick);
     };
-  }, [map]);
+  }, [map, handleMapClick, popupOverlayRef, closerRef]);
 
+  // Nokta çizim aracı butonuna tıklandığında çalışan fonksiyon
   const handlePointDrawButtonClick = () => {
     activatePointDrawTool();
   };
 
+  // JSX formatında butonun oluşturulduğu ve bu butona ikonun eklendiği svg
   return (
     <div>
       <button

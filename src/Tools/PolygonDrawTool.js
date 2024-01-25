@@ -1,15 +1,9 @@
-import React, { useEffect, useRef } from 'react';
-import Overlay from 'ol/Overlay';
+import React from 'react';
 import { Draw, Modify, Snap } from 'ol/interaction';
-import { deactivateDrawTools } from './DeactiveDrawTools';
-import { Polygon } from 'ol/geom';
-import { Feature } from 'ol';
-import { toStringHDMS } from 'ol/coordinate';
 
 //Polygon çizme aracının ve popupının oluşturulduğu fonksiyon.
 
 
-const polygonButton = document.querySelector('.polygonbtn');
 
 const PolygonDrawTool = ({ map, drawPolygonInteraction }) => {
     

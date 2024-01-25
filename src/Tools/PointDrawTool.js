@@ -11,12 +11,10 @@ const PointDrawTool = ({ map }) => {
   const popupOverlayRef = useRef(null);
   const isNewPointAdded = useRef(false);
   const closerRef = useRef(null);
-  const preventPopup = useRef(false); 
-  const isPointDrawToolActive = useRef(false); // Nokta çizme aracının aktif olup olmadığını takip eden ref
+  const preventPopup = useRef(false); // Yeni bir ref ekledik
 
   const activatePointDrawTool = () => {
     deactivateDrawTools();
-    isPointDrawToolActive.current = true; // Nokta çizme aracı aktif hale getirildi
     const draw = new Draw({
       source: map.getLayers().item(1).getSource(),
       type: 'Point',
@@ -37,7 +35,7 @@ const PointDrawTool = ({ map }) => {
       });
 
       map.getLayers().item(1).getSource().addFeature(feature);
-      preventPopup.current = true; 
+      preventPopup.current = true; // Çizim tamamlandığında pop-up'ı engelle
     });
 
     map.addInteraction(draw);
@@ -47,11 +45,6 @@ const PointDrawTool = ({ map }) => {
   const handleMapClick = (event) => {
     if (preventPopup.current) {
       preventPopup.current = false;
-      return;
-    }
-
-    // Nokta çizme aracı aktif değilse popup gösterme
-    if (!isPointDrawToolActive.current) {
       return;
     }
 

@@ -1,131 +1,104 @@
 //İmportlar burada tutuluyor
-import React, { useEffect, useState,useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import 'ol/ol.css';
 import './App.css';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
-import {  Modify } from 'ol/interaction';
+import { Modify } from 'ol/interaction';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Vector as VectorSource } from 'ol/source';
 import { fromLonLat } from 'ol/proj';
 import html2canvas from 'html2canvas';
-import {CameraOutlined} from '@ant-design/icons';
+import { CameraOutlined } from '@ant-design/icons';
 import PointDrawTool from './Tools/PointDrawTool';
 import PolygonDrawTool from './Tools/PolygonDrawTool';
 import LineDrawTool from './Tools/LineDrawTool';
 import { Toast } from 'primereact/toast';
 
-
-
-
-
-
-//Bu MapComponent fonksiyonunda haritamızı getiriyoruz.
-
 const MapComponent = () => {
-	const turkeyCenter = fromLonLat([35.1683, 37.1616]);
-	const [map, setMap] = useState(null);
-	const toast = useRef(null);
-	
+    const turkeyCenter = fromLonLat([35.1683, 37.1616]);
+    const [map, setMap] = useState(null);
+    const toast = useRef(null);
+    const [showToast, setShowToast] = useState(false);
 
-	
-	
+    useEffect(() => {
+        const initialMap = new Map({
+            target: "map",
+            layers: [
+                new TileLayer({
+                    source: new OSM(),
+                }),
+            ],
+            view: new View({
+                center: turkeyCenter,
+                zoom: 6.6,
+            }),
+        });
 
-	useEffect(() => {
-		const initialMap = new Map({
-			target: "map",
-			layers: [
-				new TileLayer({
-					source: new OSM(),
-				}),
-			],
+        const vectorSource = new VectorSource({});
+        const vectorLayer = new VectorLayer({
+            source: vectorSource,
+            style: {
+                'fill-color': 'rgba(255, 255, 255, 0.2)',
+                'stroke-color': '#ffcc33',
+                'stroke-width': 2,
+                'circle-radius': 7,
+                'circle-fill-color': '#ffcc33',
+            },
+        });
 
-      // Bu kısımda haritamız açıldığında nereye fokuslanmasını istediğimizi yazdık.
+        initialMap.addLayer(vectorLayer);
 
-			view: new View({
-				center: turkeyCenter,
-				zoom: 6.6,
-			}),
-		});
+        const modify = new Modify({ source: vectorSource });
+        initialMap.addInteraction(modify);
 
-    //Burada layerları oluşturduk.
+        setMap(initialMap);
 
-		const vectorSource = new VectorSource({});
+        return () => {
+            initialMap.setTarget(null);
+        };
+    }, []);
 
-		const vectorLayer = new VectorLayer({
-			source: vectorSource,
-			style: {
-				'fill-color': 'rgba(255, 255, 255, 0.2)',
-				'stroke-color': '#ffcc33',
-				'stroke-width': 2,
-				'circle-radius': 7,
-				'circle-fill-color': '#ffcc33',
-			  },
-		});
+    const handleClearButtonClick = () => {
+        const vectorSource = map.getLayers().item(1).getSource();
+        vectorSource.clear();
+    };
 
-		initialMap.addLayer(vectorLayer);
+    const handleResetViewButtonClick = () => {
+        const defaultView = map.getView();
+        defaultView.setCenter(turkeyCenter);
+        defaultView.setZoom(6.6);
+    };
 
-		const modify = new Modify({ source: vectorSource });
-		initialMap.addInteraction(modify);
+    const takeScreenshot = () => {
+        const mapElement = document.getElementById("map");
+        setShowToast(true);
 
-		setMap(initialMap);
+        html2canvas(mapElement).then((canvas) => {
+            canvas.toBlob((blob) => {
+                const screenshotBlob = new Blob([blob], { type: "image/png" });
 
-		return () => {
-			initialMap.setTarget(null);
-		};
-	}, []);
+                navigator.clipboard
+                    .write([new ClipboardItem({ "image/png": screenshotBlob })])
+                    .then(() => {
+                        console.log("Ekran görüntüsü panoya kopyalandı.");
+                    })
+                    .catch((error) => {
+                        console.error("Panoya kopyalama işlemi başarısız oldu:", error);
+                    });
+            });
+        });
+    };
 
-	//Temizleme butonumuz tıklama eventini burada oluşturuyoruz.
-
-	const handleClearButtonClick = () => {
-		const vectorSource = map.getLayers().item(1).getSource();
-		vectorSource.clear();
-	};
-
-	//Resetleme butonumuzun tıklama eventini de burada oluşturuyoruz.
-
-	const handleResetViewButtonClick = () => {
-		const defaultView = map.getView();
-		defaultView.setCenter(turkeyCenter);
-		defaultView.setZoom(6.6);
-	};
-
-	//Burada haritamızın ekran görüntüsü alması için bir fonksiyon oluşturduk.
-
-	const takeScreenshot = () => {
-		const mapElement = document.getElementById("map");
-		toast.current.show({ severity: 'success', summary: 'Başarılı', detail: 'Ekran Görüntüsü Panoya Kaydedildi.' });
-
-	
-
-		html2canvas(mapElement).then((canvas) => {
-			canvas.toBlob((blob) => {
-				const screenshotBlob = new Blob([blob], { type: "image/png" });
-
-				navigator.clipboard
-					.write([new ClipboardItem({ "image/png": screenshotBlob })])
-					.then(() => {
-						console.log("Ekran görüntüsü panoya kopyalandı.");
-					})
-					.catch((error) => {
-						console.error("Panoya kopyalama işlemi başarısız oldu:", error);
-					});
-			});
-		});
-	};
-
-
-  //Haritamızın return edildiği yer butonlarımızın oluşturulup diğer componentlerin çağırılıp çalıştırıldığı yer.
-
-	return (
-		<div id="map" style={{ width: "100%", height: "1000px" }}>
-			<div className="toolbar">
-			<div className="toolbar-content">
-			<PointDrawTool map={map} className="pointbtn" />
-			<PolygonDrawTool map={map} className="polygonbtn" />
-			<LineDrawTool map={map} className="linebtn" />
+    return (
+        <div id="map" style={{ width: "100%", height: "1000px" }}>
+            <div className="toolbar">
+                <div className="toolbar-content">
+                    <PointDrawTool map={map} className="pointbtn" />
+                    <PolygonDrawTool map={map} className="polygonbtn" />
+                    <LineDrawTool map={map} className="linebtn" />
 				<button
 					onClick={handleClearButtonClick}
 					className="clearbtn"
@@ -185,9 +158,11 @@ const MapComponent = () => {
 					title="Take a Screenshot">
 					<CameraOutlined />
 				</button>
-			</div>
-			<Toast className='screenshot-toast' ref={toast}></Toast>
-			</div>
+				</div>
+                {showToast && (
+                    <Toast className='screenshot-toast' ref={toast}></Toast>
+                )}
+            </div>
 		</div>
 	);
 };

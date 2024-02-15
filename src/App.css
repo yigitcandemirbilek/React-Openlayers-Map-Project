@@ -9,12 +9,6 @@
 
 /* Toolbarın cssleri*/
 
-.screenshot-toast {
-    background-color: var(--primary-btn-color);
-    border-radius: 8px;
-    color: white;
-    padding: 1rem;
-}
 
 .toolbar-content {
     position: absolute;
@@ -232,3 +226,14 @@
   .ol-popup-closer:after {
     content: "✖";
   }
+
+  /* Screenshot toast */
+
+  .screenshot-toast {
+    background-color: var(--primary-btn-color);
+    border-radius: 8px;
+    color: white;
+    padding: 1rem;
+    
+}
+

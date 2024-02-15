@@ -3,8 +3,6 @@ import { Draw, Modify, Snap } from 'ol/interaction';
 
 //Polygon çizme aracının ve popupının oluşturulduğu fonksiyon.
 
-
-
 const PolygonDrawTool = ({ map, drawPolygonInteraction }) => {
     
     const activatePolygonDrawTool = () => {

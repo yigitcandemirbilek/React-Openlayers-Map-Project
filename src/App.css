@@ -250,14 +250,26 @@
     color: white;
 }
 
-.distance-info{
+/* Mesafe ölçme popupının cssleri */
+
+.distance-info {
     color: white;
     border: 2px solid #cccccc;
-    padding: 4px;
+    padding: 20px;
     font-size: 12px;
     background-color: var(--primary-btn-color);
-
-    
+    position: relative;
+    border-radius: 5%;
 }
+
+.distance-info-close-button {
+    color: white;
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    padding: 5px 10px; 
+}
+
+
 
 

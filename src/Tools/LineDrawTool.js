@@ -60,8 +60,39 @@ const LineDrawTool = ({ map }) => {
 
             const output = `${length.toFixed(2)} km`;
 
-            const popupElement = document.createElement('div');
-            popupElement.innerHTML = `<p class= "distance-info">Mesafe: ${output}</p>`;
+          // Popup elementini oluştur
+const popupElement = document.createElement('div');
+popupElement.classList.add('popup-container');
+
+// Mesafe bilgisini içeren paragraf elementini oluştur
+const distanceInfoParagraph = document.createElement('p');
+distanceInfoParagraph.textContent = `Mesafe: ${output}`;
+distanceInfoParagraph.classList.add('distance-info');
+
+// Kapatma düğmesini oluştur
+const closeButton = document.createElement('span');
+closeButton.textContent = 'X'; // Kapatma düğmesinin içeriğini "X" olarak ayarla
+closeButton.style.cursor = 'pointer'; // Fare işaretçisinin kapatma düğmesi üzerine gelince el şeklinde görünmesini sağla
+closeButton.classList.add('distance-info-close-button'); // Kapatma düğmesine sınıf ekle
+
+closeButton.addEventListener('click', function() {
+    // Popup elementini kaldır
+    popupElement.remove();
+});
+
+// Mesafe bilgisini içeren paragraf elementine kapatma düğmesini ekle
+distanceInfoParagraph.appendChild(closeButton);
+
+
+// Paragrafı popup elementine ekle
+popupElement.appendChild(distanceInfoParagraph);
+
+// Sayfa içinde popup elementini görüntüle
+document.body.appendChild(popupElement);
+
+
+            // Popup'ı belirli bir elementin altına ekleyin
+            document.body.appendChild(popupElement);
 
             const popupOverlay = new Overlay({
                 element: popupElement,

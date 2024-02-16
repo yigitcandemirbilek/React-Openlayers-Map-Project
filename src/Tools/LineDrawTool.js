@@ -7,8 +7,6 @@ import { getLength } from 'ol/sphere';
 import { Feature } from 'ol';
 import { toStringHDMS } from 'ol/coordinate';
 
-//Çizim aracımızın fonksiyonu ve km hesaplama fonksiyonu burada tutuluyor.
-
 const LineDrawTool = ({ map }) => {
     const popupOverlayRef = useRef(null);
     const isNewLineAdded = useRef(false);
@@ -22,9 +20,6 @@ const LineDrawTool = ({ map }) => {
             source: map.getLayers().item(1).getSource(),
             type: 'LineString',
         });
-
-        const sketch = new Feature();
-        let tooltipCoord;
 
         drawLineInteraction.on('drawstart', (event) => {
             isNewLineAdded.current = false;
@@ -43,10 +38,10 @@ const LineDrawTool = ({ map }) => {
                 const geom = evt.target.getGeometry();
                 const length = getLength(geom, {
                     projection: map.getView().getProjection(),
-                    radius: 6371, // Dünya'nın yarıçapı (örneğin, kilometre cinsinden)
+                    radius: 6371,
                 });
                 const output = `${length.toFixed(2)} km`;
-                tooltipCoord = geom.getLastCoordinate();
+                const tooltipCoord = geom.getLastCoordinate();
                 tooltipElement.innerHTML = `<span>${output}</span>`;
                 measureTooltipRef.current.setPosition(tooltipCoord);
             });
@@ -57,8 +52,32 @@ const LineDrawTool = ({ map }) => {
             map.removeOverlay(measureTooltipRef.current);
             map.removeInteraction(drawLineInteraction);
 
+            const geometry = event.feature.getGeometry();
+            const length = getLength(geometry, {
+                projection: map.getView().getProjection(),
+                radius: 6371,
+            });
+
+            const output = `${length.toFixed(2)} km`;
+
+            const popupElement = document.createElement('div');
+            popupElement.innerHTML = `<p class= "distance-info">Mesafe: ${output}</p>`;
+
+            const popupOverlay = new Overlay({
+                element: popupElement,
+                autoPan: true,
+                autoPanAnimation: {
+                    duration: 250,
+                },
+            });
+
+            const lastCoordinate = geometry.getLastCoordinate();
+            popupOverlay.setPosition(lastCoordinate);
+
+            map.addOverlay(popupOverlay);
+
             const feature = new Feature({
-                geometry: new LineString(event.feature.getGeometry().getCoordinates()),
+                geometry: new LineString(geometry.getCoordinates()),
             });
             map.getLayers().item(1).getSource().addFeature(feature);
         });
@@ -101,7 +120,7 @@ const LineDrawTool = ({ map }) => {
                     popupOverlayRef.current.setPosition(coordinate);
 
                     const content = document.createElement('p');
-                    content.innerHTML = `Çizgi Uzunluğu: ${getLength(
+                    content.innerHTML = `Mesafe: ${getLength(
                         feature.getGeometry(),
                         { projection: map.getView().getProjection(), radius: 6371 }
                     ).toFixed(2)} km`;
@@ -122,13 +141,9 @@ const LineDrawTool = ({ map }) => {
         };
     }, [map]);
 
-    //Çizgi çizme aracının butounun click eventi burada oluşturuldu.
-
     const handleLineDrawButtonClick = () => {
         activateLineDrawTool();
     };
-
-    //Çizim aracımızın return edildiği yer.
 
     return (
         <div>

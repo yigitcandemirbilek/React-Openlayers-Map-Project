@@ -18,10 +18,6 @@ import LineDrawTool from './Tools/LineDrawTool';
 import { Toast } from 'primereact/toast';
 
 
-
-
-
-
 //Bu MapComponent fonksiyonunda haritamızı getiriyoruz.
 
 const MapComponent = () => {

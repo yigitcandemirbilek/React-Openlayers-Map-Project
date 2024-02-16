@@ -21,7 +21,7 @@ export const saveCoordinatesToPostgres = async (coordinates) => {
     };
 
     // Axios ile POST isteği yaparak koordinatları PostgreSQL'e kaydet
-    const response = await axios.post('/api/save-coordinates', geoJsonData);
+    const response = await axios.post('https://localhost:7196/api/SpatialData', geoJsonData);
 
     // İşlem başarılı olduysa geri dönen veriyi konsola yazdır
     console.log(response.data);

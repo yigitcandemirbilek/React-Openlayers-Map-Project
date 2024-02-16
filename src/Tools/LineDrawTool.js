@@ -135,7 +135,7 @@ const LineDrawTool = ({ map }) => {
             <button
                 onClick={handleLineDrawButtonClick}
                 className="linebtn"
-                title="Çizgi Aracı">
+                title="Line Tool">
                 <svg
                     width="24"
                     height="24"

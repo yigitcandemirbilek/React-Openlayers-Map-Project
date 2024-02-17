@@ -5,7 +5,7 @@ import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
-import { Modify } from 'ol/interaction';
+import { Modify, Select } from 'ol/interaction';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Vector as VectorSource } from 'ol/source';
 import { fromLonLat } from 'ol/proj';
@@ -51,6 +51,27 @@ const MapComponent = () => {
 
         const modify = new Modify({ source: vectorSource });
         initialMap.addInteraction(modify);
+
+        const select = new Select();
+        initialMap.addInteraction(select);
+
+        select.on('select', (e) => {
+            const selectedFeatures = e.target.getFeatures();
+            selectedFeatures.forEach((feature) => {
+                // Eğer seçilen öğe bir noktaysa
+                if (feature.getGeometry().getType() === 'Point') {
+                    console.log('Nokta seçildi:', feature.getGeometry().getCoordinates());
+                }
+                // Eğer seçilen öğe bir poligonsa
+                else if (feature.getGeometry().getType() === 'Polygon') {
+                    console.log('Poligon seçildi:', feature.getGeometry().getCoordinates());
+                }
+                // Eğer seçilen öğe bir çizgiyse
+                else if (feature.getGeometry().getType() === 'LineString') {
+                    console.log('Çizgi seçildi:', feature.getGeometry().getCoordinates());
+                }
+            });
+        });
 
         setMap(initialMap);
 

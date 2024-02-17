@@ -8,6 +8,8 @@ import { Point } from 'ol/geom';
 import { Feature } from 'ol';
 import { transform } from 'ol/proj';
 import { saveCoordinatesToPostgres } from '../Api'; 
+import WKT from "ol/format/WKT";
+
 
 const PointDrawTool = ({ map }) => {
   const drawPointInteraction = useRef(null);
@@ -35,6 +37,16 @@ const PointDrawTool = ({ map }) => {
       type: 'Point',
     });
 
+    
+    const convertToWkt = (feature, wktProjection, featureProjection) => {
+
+    
+      return new WKT().writeGeometry(feature.getGeometry(), {
+          dataProjection: wktProjection,
+          featureProjection: featureProjection,
+      });
+    };
+
     draw.on('drawend', (event) => {
       if (drawPointInteraction.current) {
         map.removeInteraction(drawPointInteraction.current);
@@ -47,6 +59,10 @@ const PointDrawTool = ({ map }) => {
       const feature = new Feature({
         geometry: pointGeometry,
       });
+      
+      feature.set("isOverlay", true);
+      console.log(feature.get("isOverlay"));
+      console.log(convertToWkt(feature,"EPSG:4326","EPSG:3857"));
 
       map.getLayers().item(1).getSource().addFeature(feature);
 
@@ -65,7 +81,7 @@ const PointDrawTool = ({ map }) => {
     const coordinate = map.getEventCoordinate(event.originalEvent);
     const feature = map.forEachFeatureAtPixel(pixel, (feat) => feat);
 
-    if (feature && feature.getGeometry().getType() === 'Point') {
+    if (feature && feature.get("isOverlay" === true)) {
       const wgs84Coordinate = transform(coordinate, 'EPSG:3857', 'EPSG:4326');
       const coordinatesText = `${wgs84Coordinate[1]}, ${wgs84Coordinate[0]}`;
 

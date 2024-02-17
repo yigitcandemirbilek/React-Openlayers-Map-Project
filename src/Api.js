@@ -2,6 +2,8 @@
 
 import axios from 'axios';
 
+
+
 // PostgreSQL tablosuna koordinatları kaydetmek için bir işlev
 export const saveCoordinatesToPostgres = async (coordinates) => {
   try {

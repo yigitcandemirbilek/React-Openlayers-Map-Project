@@ -82,6 +82,7 @@ const MapComponent = () => {
         initialMap.addInteraction(select);
 
         const popupElement = document.createElement('div');
+        popupElement.className = 'ol-popup';
         const popup = new Overlay({
             element: popupElement,
             positioning: 'bottom-center',

@@ -5,7 +5,6 @@ import { deactivateDrawTools } from './DeactiveDrawTools';
 import { LineString } from 'ol/geom';
 import { getLength } from 'ol/sphere';
 import { Feature } from 'ol';
-import { toStringHDMS } from 'ol/coordinate';
 
 const LineDrawTool = ({ map }) => {
     const popupOverlayRef = useRef(null);

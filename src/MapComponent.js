@@ -22,6 +22,7 @@ const MapComponent = () => {
     const [map, setMap] = useState(null);
     const [popup, setPopup] = useState(null);
     const [isDrawing, setIsDrawing] = useState(false);
+    const [popupContent, setPopupContent] = useState('');
     const toast = useRef(null);
 
     useEffect(() => {
@@ -61,17 +62,20 @@ const MapComponent = () => {
                 const selectedFeature = event.selected[0];
                 if (selectedFeature.getGeometry().getType() === 'Point') {
                     const coordinate = selectedFeature.getGeometry().getCoordinates();
-                    const content = `<p>Clicked Coordinate: ${coordinate}</p>`;
+                    const content = `<p>Clicked Coordinate: ${coordinate}</p><button onclick="savePopupContent()">Kaydet</button>`;
+                    setPopupContent(content);
                     popup.getElement().innerHTML = content;
                     popup.setPosition(coordinate);
                 } else if (selectedFeature.getGeometry().getType() === 'Polygon') {
                     const coordinates = selectedFeature.getGeometry().getCoordinates()[0]; // Assuming it's a simple polygon
-                    const content = `<p>Polygon Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul>`;
+                    const content = `<p>Polygon Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul><button onclick="savePopupContent()">Kaydet</button>`;
+                    setPopupContent(content);
                     popup.getElement().innerHTML = content;
                     popup.setPosition(coordinates[0]);
                 } else if (selectedFeature.getGeometry().getType() === 'LineString') {
                     const coordinates = selectedFeature.getGeometry().getCoordinates();
-                    const content = `<p>Line Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul>`;
+                    const content = `<p>Line Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul><button onclick="savePopupContent()">Kaydet</button>`;
+                    setPopupContent(content);
                     popup.getElement().innerHTML = content;
                     popup.setPosition(coordinates[0]);
                 } else {
@@ -93,6 +97,8 @@ const MapComponent = () => {
 
         setMap(initialMap);
         setPopup(popup);
+
+        window.savePopupContent = handleSaveButtonClick;
 
         return () => {
             initialMap.setTarget(null);
@@ -135,6 +141,12 @@ const MapComponent = () => {
                     });
             });
         });
+    };
+
+    const handleSaveButtonClick = () => {
+        // Burada popup içeriğini kaydetme işlemini gerçekleştirin
+        // Örneğin: popupContent'i bir veritabanına veya başka bir yerel depolama alanına kaydedebilirsiniz.
+        console.log('Popup içeriği kaydedildi:', popupContent);
     };
 
     return (

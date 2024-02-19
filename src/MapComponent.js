@@ -15,10 +15,13 @@ import PointDrawTool from './Tools/PointDrawTool';
 import PolygonDrawTool from './Tools/PolygonDrawTool';
 import LineDrawTool from './Tools/LineDrawTool';
 import { Toast } from 'primereact/toast';
+import Overlay from 'ol/Overlay';
 
 const MapComponent = () => {
     const turkeyCenter = fromLonLat([35.1683, 37.1616]);
     const [map, setMap] = useState(null);
+    const [popup, setPopup] = useState(null);
+    const [isDrawing, setIsDrawing] = useState(false);
     const toast = useRef(null);
 
     useEffect(() => {
@@ -53,48 +56,59 @@ const MapComponent = () => {
         initialMap.addInteraction(modify);
 
         const select = new Select();
+        select.on('select', function(event) {
+            if (!isDrawing && event.selected.length > 0) {
+                const selectedFeature = event.selected[0];
+                if (selectedFeature.getGeometry().getType() === 'Point') {
+                    const coordinate = selectedFeature.getGeometry().getCoordinates();
+                    const content = `<p>Clicked Coordinate: ${coordinate}</p>`;
+                    popup.getElement().innerHTML = content;
+                    popup.setPosition(coordinate);
+                } else if (selectedFeature.getGeometry().getType() === 'Polygon') {
+                    const coordinates = selectedFeature.getGeometry().getCoordinates()[0]; // Assuming it's a simple polygon
+                    const content = `<p>Polygon Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul>`;
+                    popup.getElement().innerHTML = content;
+                    popup.setPosition(coordinates[0]);
+                } else if (selectedFeature.getGeometry().getType() === 'LineString') {
+                    const coordinates = selectedFeature.getGeometry().getCoordinates();
+                    const content = `<p>Line Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul>`;
+                    popup.getElement().innerHTML = content;
+                    popup.setPosition(coordinates[0]);
+                } else {
+                    popup.setPosition(undefined);
+                }
+            }
+        });
         initialMap.addInteraction(select);
 
-        select.on('select', (e) => {
-            const selectedFeatures = e.target.getFeatures();
-            selectedFeatures.forEach((feature) => {
-                // Eğer seçilen öğe bir noktaysa
-                if (feature.getGeometry().getType() === 'Point') {
-                    console.log('Nokta seçildi:', feature.getGeometry().getCoordinates());
-                }
-                // Eğer seçilen öğe bir poligonsa
-                else if (feature.getGeometry().getType() === 'Polygon') {
-                    console.log('Poligon seçildi:', feature.getGeometry().getCoordinates());
-                }
-                // Eğer seçilen öğe bir çizgiyse
-                else if (feature.getGeometry().getType() === 'LineString') {
-                    console.log('Çizgi seçildi:', feature.getGeometry().getCoordinates());
-                }
-            });
+        const popupElement = document.createElement('div');
+        const popup = new Overlay({
+            element: popupElement,
+            positioning: 'bottom-center',
+            stopEvent: false,
+            offset: [0, -50],
         });
+        initialMap.addOverlay(popup);
 
         setMap(initialMap);
+        setPopup(popup);
 
         return () => {
             initialMap.setTarget(null);
         };
-    }, []);
+    }, [isDrawing]);
 
-	const handleClearButtonClick = () => {
-		// Overlay'leri kaldırmak için map objesini kullanarak tüm overlay'leri alıyoruz
-		const overlays = map.getOverlays().getArray();
-		// Her overlay'i döngüye alarak class'ı "ol-popup" olanları kaldırıyoruz
-		overlays.forEach((overlay) => {
-			if (overlay.getElement().classList.contains('ol-popup')) {
-				map.removeOverlay(overlay);
-			}
-		});
-	
-		// Vektör kaynağını temizliyoruz
-		const vectorSource = map.getLayers().item(1).getSource();
-		vectorSource.clear();
-	};
-	
+    const handleClearButtonClick = () => {
+        const overlays = map.getOverlays().getArray();
+        overlays.forEach((overlay) => {
+            if (overlay.getElement().classList.contains('ol-popup')) {
+                map.removeOverlay(overlay);
+            }
+        });
+
+        const vectorSource = map.getLayers().item(1).getSource();
+        vectorSource.clear();
+    };
 
     const handleResetViewButtonClick = () => {
         const defaultView = map.getView();
@@ -126,7 +140,12 @@ const MapComponent = () => {
         <div id="map" style={{ width: "100%", height: "1000px" }}>
             <div className="toolbar">
                 <div className="toolbar-content">
-                    <PointDrawTool map={map} className="pointbtn" />
+                    <PointDrawTool
+                        map={map}
+                        className="pointbtn"
+                        onStartDrawing={() => setIsDrawing(true)}
+                        onFinishDrawing={() => setIsDrawing(false)}
+                    />
                     <PolygonDrawTool map={map} className="polygonbtn" />
                     <LineDrawTool map={map} className="linebtn" />
                     <button

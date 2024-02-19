@@ -62,19 +62,19 @@ const MapComponent = () => {
                 const selectedFeature = event.selected[0];
                 if (selectedFeature.getGeometry().getType() === 'Point') {
                     const coordinate = selectedFeature.getGeometry().getCoordinates();
-                    const content = `<p>Clicked Coordinate: ${coordinate}</p><button onclick="savePopupContent()">Kaydet</button>`;
+                    const content = `<p>Clicked Coordinate: ${coordinate}</p><button onclick="savePopupContent()">Kaydet</button><button className="ol-popup-closer" onclick="closePopup()">Kapat</button>`;
                     setPopupContent(content);
                     popup.getElement().innerHTML = content;
                     popup.setPosition(coordinate);
                 } else if (selectedFeature.getGeometry().getType() === 'Polygon') {
                     const coordinates = selectedFeature.getGeometry().getCoordinates()[0]; // Assuming it's a simple polygon
-                    const content = `<p>Polygon Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul><button onclick="savePopupContent()">Kaydet</button>`;
+                    const content = `<p>Polygon Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul><button onclick="savePopupContent()">Kaydet</button><button className="ol-popup-closer" onclick="closePopup()">Kapat</button>`;
                     setPopupContent(content);
                     popup.getElement().innerHTML = content;
                     popup.setPosition(coordinates[0]);
                 } else if (selectedFeature.getGeometry().getType() === 'LineString') {
                     const coordinates = selectedFeature.getGeometry().getCoordinates();
-                    const content = `<p>Line Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul><button onclick="savePopupContent()">Kaydet</button>`;
+                    const content = `<p>Line Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul><button onclick="savePopupContent()">Kaydet</button><button className="ol-popup-closer" onclick="closePopup()">Kapat</button>`;
                     setPopupContent(content);
                     popup.getElement().innerHTML = content;
                     popup.setPosition(coordinates[0]);
@@ -99,6 +99,7 @@ const MapComponent = () => {
         setPopup(popup);
 
         window.savePopupContent = handleSaveButtonClick;
+        window.closePopup = handleCloseButtonClick;
 
         return () => {
             initialMap.setTarget(null);
@@ -148,6 +149,14 @@ const MapComponent = () => {
         // Örneğin: popupContent'i bir veritabanına veya başka bir yerel depolama alanına kaydedebilirsiniz.
         console.log('Popup içeriği kaydedildi:', popupContent);
     };
+
+    const handleCloseButtonClick = () => {
+        if (popup) { // Popup değişkeni null değilse
+            popup.setPosition(undefined); // Kapatma işlemini gerçekleştir
+            console.log("çalıştı");
+        }
+    };
+    
 
     return (
         <div id="map" style={{ width: "100%", height: "1000px" }}>

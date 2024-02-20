@@ -61,8 +61,7 @@ const PointDrawTool = ({ map }) => {
       });
       
       feature.set("isOverlay", true);
-      console.log(feature.get("isOverlay"));
-      console.log(convertToWkt(feature,"EPSG:4326","EPSG:3857"));
+
 
       map.getLayers().item(1).getSource().addFeature(feature);
 

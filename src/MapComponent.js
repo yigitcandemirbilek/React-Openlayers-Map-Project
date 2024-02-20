@@ -21,9 +21,9 @@ const MapComponent = () => {
     const turkeyCenter = fromLonLat([35.1683, 37.1616]);
     const [map, setMap] = useState(null);
     const [popup, setPopup] = useState(null);
-    const [isDrawing, setIsDrawing] = useState(false);
     const [popupContent, setPopupContent] = useState('');
     const toast = useRef(null);
+    const [isDrawing, setIsDrawing] = useState(false);
 
     useEffect(() => {
         const initialMap = new Map({
@@ -58,31 +58,34 @@ const MapComponent = () => {
 
         const select = new Select();
         select.on('select', function(event) {
-            if (!isDrawing && event.selected.length > 0) {
-                const selectedFeature = event.selected[0];
-                if (selectedFeature.getGeometry().getType() === 'Point') {
+            const selectedFeature = event.selected[0];
+            if (selectedFeature) {
+                const geometryType = selectedFeature.getGeometry().getType();
+                let content = '';
+                if (geometryType === 'Point') {
                     const coordinate = selectedFeature.getGeometry().getCoordinates();
-                    const content = `<p>Clicked Coordinate: ${coordinate}</p><button onclick="savePopupContent()">Kaydet</button><button className="ol-popup-closer" onclick="closePopup()">Kapat</button>`;
-                    setPopupContent(content);
-                    popup.getElement().innerHTML = content;
-                    popup.setPosition(coordinate);
-                } else if (selectedFeature.getGeometry().getType() === 'Polygon') {
+                    content = `<p>Clicked Coordinate: ${coordinate}</p>`;
+                } else if (geometryType === 'Polygon') {
                     const coordinates = selectedFeature.getGeometry().getCoordinates()[0]; // Assuming it's a simple polygon
-                    const content = `<p>Polygon Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul><button onclick="savePopupContent()">Kaydet</button><button className="ol-popup-closer" onclick="closePopup()">Kapat</button>`;
-                    setPopupContent(content);
-                    popup.getElement().innerHTML = content;
-                    popup.setPosition(coordinates[0]);
-                } else if (selectedFeature.getGeometry().getType() === 'LineString') {
+                    content = `<p>Polygon Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul>`;
+                } else if (geometryType === 'LineString') {
                     const coordinates = selectedFeature.getGeometry().getCoordinates();
-                    const content = `<p>Line Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul><button onclick="savePopupContent()">Kaydet</button><button className="ol-popup-closer" onclick="closePopup()">Kapat</button>`;
-                    setPopupContent(content);
-                    popup.getElement().innerHTML = content;
-                    popup.setPosition(coordinates[0]);
-                } else {
-                    popup.setPosition(undefined);
+                    content = `<p>Line Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul>`;
                 }
+                // Kaydet ve kapat butonlarını ekleyin
+                content += `
+                    <button onclick="savePopupContent()" className="savebtn" title="Kaydet">Kaydet</button>
+                    <a onclick="closePopup()" href= '#' id="ol-popup-closer"></a>
+                `;
+                setPopupContent(content);
+                popup.getElement().innerHTML = content;
+                popup.setPosition(selectedFeature.getGeometry().getFirstCoordinate());
+            } else {
+                popup.setPosition(undefined);
             }
         });
+        
+        
         initialMap.addInteraction(select);
 
         const popupElement = document.createElement('div');
@@ -104,7 +107,7 @@ const MapComponent = () => {
         return () => {
             initialMap.setTarget(null);
         };
-    }, [isDrawing]);
+    }, []);
 
     const handleClearButtonClick = () => {
         const overlays = map.getOverlays().getArray();
@@ -151,9 +154,22 @@ const MapComponent = () => {
     };
 
     const handleCloseButtonClick = () => {
-        if (popup) { // Popup değişkeni null değilse
-            popup.setPosition(undefined); // Kapatma işlemini gerçekleştir
-            console.log("çalıştı");
+        if (popup) {
+            popup.setPosition(undefined); // veya popup.setPosition(undefined);
+        }
+    };
+
+    const updatePopupContent = (content) => {
+        const popupContentWithButton = `
+            <div>
+                ${content}
+                <button onclick="savePopupContent()" className="savebtn" title="Kaydet">Kaydet</button>
+                <button onclick="closePopup()" className="closebtn" title="Kapat">Kapat</button>
+            </div>
+        `;
+        setPopupContent(popupContentWithButton);
+        if (popup) {
+            popup.getElement().innerHTML = popupContentWithButton;
         }
     };
     

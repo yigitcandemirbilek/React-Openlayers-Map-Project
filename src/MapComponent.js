@@ -148,10 +148,20 @@ const MapComponent = () => {
     };
 
     const handleSaveButtonClick = () => {
-        // Burada popup içeriğini kaydetme işlemini gerçekleştirin
-        // Örneğin: popupContent'i bir veritabanına veya başka bir yerel depolama alanına kaydedebilirsiniz.
-        console.log('Popup içeriği kaydedildi:', popupContent);
+        const popupElement = document.createElement('div');
+        popupElement.innerHTML = popupContent;
+        const coordinateElements = popupElement.querySelectorAll('li');
+    
+        if (coordinateElements.length > 0) {
+            const coordinates = Array.from(coordinateElements).map(element => element.textContent);
+            console.log('Koordinatlar:', coordinates);
+        } else {
+            console.log('Koordinatlar bulunamadı.');
+        }
     };
+    
+    
+    
 
     const handleCloseButtonClick = () => {
         if (popup) {
@@ -171,7 +181,10 @@ const MapComponent = () => {
         if (popup) {
             popup.getElement().innerHTML = popupContentWithButton;
         }
+        // savePopupContent'i tekrar window nesnesine ata
+        window.savePopupContent = handleSaveButtonClick;
     };
+    
     
 
     return (

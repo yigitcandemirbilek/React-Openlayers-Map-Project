@@ -62,20 +62,19 @@ const MapComponent = () => {
                 const selectedFeature = event.selected[0];
                 if (selectedFeature.getGeometry().getType() === 'Point') {
                     const coordinate = selectedFeature.getGeometry().getCoordinates();
-                    const content = `<p>Clicked Coordinate: ${coordinate}</p><button id="saveButton" onclick="savePopupContent()">Kaydet</button><a id="ol-popup-closer" href = '#' onclick="closePopup()"></a>`;
+                    const content = `<p>Clicked Coordinate: ${coordinate}</p><button onclick="savePopupContent()">Kaydet</button><button className="ol-popup-closer" onclick="closePopup()">Kapat</button>`;
                     setPopupContent(content);
                     popup.getElement().innerHTML = content;
                     popup.setPosition(coordinate);
                 } else if (selectedFeature.getGeometry().getType() === 'Polygon') {
                     const coordinates = selectedFeature.getGeometry().getCoordinates()[0]; // Assuming it's a simple polygon
-                    const content = `<p>Polygon Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul><button onclick="savePopupContent()">Kaydet</button><a id="ol-popup-closer" href = '#' onclick="closePopup()"></a>`;
-                    setPopupContent(content);
+                    const content = `<p>Polygon Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul><button onclick="savePopupContent()">Kaydet</button><button className="ol-popup-closer" onclick="closePopup()">Kapat</button>`;
                     setPopupContent(content);
                     popup.getElement().innerHTML = content;
                     popup.setPosition(coordinates[0]);
                 } else if (selectedFeature.getGeometry().getType() === 'LineString') {
                     const coordinates = selectedFeature.getGeometry().getCoordinates();
-                    const content = `<p>Line Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul><button onclick="savePopupContent()">Kaydet</button><a id="ol-popup-closer" href = '#' onclick="closePopup()"></a>`;
+                    const content = `<p>Line Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul><button onclick="savePopupContent()">Kaydet</button><button className="ol-popup-closer" onclick="closePopup()">Kapat</button>`;
                     setPopupContent(content);
                     popup.getElement().innerHTML = content;
                     popup.setPosition(coordinates[0]);
@@ -152,12 +151,11 @@ const MapComponent = () => {
     };
 
     const handleCloseButtonClick = () => {
-        if (popup) {
-            popup.setPosition(undefined); // veya popup.setPosition(undefined);
+        if (popup) { // Popup değişkeni null değilse
+            popup.setPosition(undefined); // Kapatma işlemini gerçekleştir
+            console.log("çalıştı");
         }
     };
-    
-    
     
 
     return (

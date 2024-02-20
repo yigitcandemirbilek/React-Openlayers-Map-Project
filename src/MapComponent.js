@@ -5,7 +5,8 @@ import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
-import { Modify, Select } from 'ol/interaction';
+import { Select } from 'ol/interaction';
+import { Modify } from 'ol/interaction';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Vector as VectorSource } from 'ol/source';
 import { fromLonLat } from 'ol/proj';
@@ -15,15 +16,11 @@ import PointDrawTool from './Tools/PointDrawTool';
 import PolygonDrawTool from './Tools/PolygonDrawTool';
 import LineDrawTool from './Tools/LineDrawTool';
 import { Toast } from 'primereact/toast';
-import Overlay from 'ol/Overlay';
 
 const MapComponent = () => {
     const turkeyCenter = fromLonLat([35.1683, 37.1616]);
     const [map, setMap] = useState(null);
-    const [popup, setPopup] = useState(null);
-    const [popupContent, setPopupContent] = useState('');
     const toast = useRef(null);
-    const [isDrawing, setIsDrawing] = useState(false);
 
     useEffect(() => {
         const initialMap = new Map({
@@ -38,7 +35,7 @@ const MapComponent = () => {
                 zoom: 6.6,
             }),
         });
-
+    
         const vectorSource = new VectorSource({});
         const vectorLayer = new VectorLayer({
             source: vectorSource,
@@ -50,73 +47,55 @@ const MapComponent = () => {
                 'circle-fill-color': '#ffcc33',
             },
         });
-
+    
         initialMap.addLayer(vectorLayer);
-
+    
         const modify = new Modify({ source: vectorSource });
         initialMap.addInteraction(modify);
 
         const select = new Select();
-        select.on('select', function(event) {
-            const selectedFeature = event.selected[0];
-            if (selectedFeature) {
-                const geometryType = selectedFeature.getGeometry().getType();
-                let content = '';
-                if (geometryType === 'Point') {
-                    const coordinate = selectedFeature.getGeometry().getCoordinates();
-                    content = `<p>Clicked Coordinate: ${coordinate}</p>`;
-                } else if (geometryType === 'Polygon') {
-                    const coordinates = selectedFeature.getGeometry().getCoordinates()[0]; // Assuming it's a simple polygon
-                    content = `<p>Polygon Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul>`;
-                } else if (geometryType === 'LineString') {
-                    const coordinates = selectedFeature.getGeometry().getCoordinates();
-                    content = `<p>Line Coordinates:</p><ul>${coordinates.map(coord => `<li>${coord}</li>`).join('')}</ul>`;
-                }
-                // Kaydet ve kapat butonlarını ekleyin
-                content += `
-                    <button onclick="savePopupContent()" className="savebtn" title="Kaydet">Kaydet</button>
-                    <a onclick="closePopup()" href= '#' id="ol-popup-closer"></a>
-                `;
-                setPopupContent(content);
-                popup.getElement().innerHTML = content;
-                popup.setPosition(selectedFeature.getGeometry().getFirstCoordinate());
-            } else {
-                popup.setPosition(undefined);
-            }
-        });
-        
-        
         initialMap.addInteraction(select);
+    
+        const handleMapClick = (event) => {
+            const clickedCoordinate = event.coordinate;
+            console.log('Tıklanan Koordinatlar:', clickedCoordinate);
+        
+            const selectedFeatures = select.getFeatures();
+            if (selectedFeatures.getLength() > 0) {
+                const selectedFeature = selectedFeatures.item(0);
+                const geometry = selectedFeature.getGeometry();
+        
+                if (geometry.getType() === 'Point') {
+                    console.log('Tıklanan yer bir nokta çizimi.');
+                    console.log('Noktanın Koordinatları:', geometry.getCoordinates());
+                } else if (geometry.getType() === 'Polygon') {
+                    console.log('Tıklanan yer bir poligon çizimi.');
+                    console.log('Poligonun Koordinatları:', geometry.getCoordinates());
+                } else if (geometry.getType() === 'LineString') {
+                    console.log('Tıklanan yer bir çizgi çizimi.');
+                    console.log('Çizginin Koordinatları:', geometry.getCoordinates());
+                }
+            }
+        };
+        
+        
+        
 
-        const popupElement = document.createElement('div');
-        popupElement.className = 'ol-popup';
-        const popup = new Overlay({
-            element: popupElement,
-            positioning: 'bottom-center',
-            stopEvent: false,
-            offset: [0, -50],
-        });
-        initialMap.addOverlay(popup);
-
+        select.on('select', handleMapClick); // Select olayı tetiklendiğinde handleMapClick fonksiyonunu çağırır.
+    
         setMap(initialMap);
-        setPopup(popup);
-
-        window.savePopupContent = handleSaveButtonClick;
-        window.closePopup = handleCloseButtonClick;
-
+    
         return () => {
             initialMap.setTarget(null);
+            select.un('select', handleMapClick); // Etkinlik dinleyicisini kaldır.
         };
     }, []);
 
-    const handleClearButtonClick = () => {
-        const overlays = map.getOverlays().getArray();
-        overlays.forEach((overlay) => {
-            if (overlay.getElement().classList.contains('ol-popup')) {
-                map.removeOverlay(overlay);
-            }
-        });
 
+    
+    
+
+    const handleClearButtonClick = () => {
         const vectorSource = map.getLayers().item(1).getSource();
         vectorSource.clear();
     };
@@ -146,44 +125,6 @@ const MapComponent = () => {
             });
         });
     };
-
-    const handleSaveButtonClick = () => {
-        const popupElement = document.createElement('div');
-        popupElement.innerHTML = popupContent;
-        const coordinateElements = popupElement.querySelectorAll('li');
-    
-        if (coordinateElements.length > 0) {
-            const coordinates = Array.from(coordinateElements).map(element => element.textContent);
-            console.log('Koordinatlar:', coordinates);
-        } else {
-            console.log('Koordinatlar bulunamadı.');
-        }
-    };
-    
-    
-    
-
-    const handleCloseButtonClick = () => {
-        if (popup) {
-            popup.setPosition(undefined); // veya popup.setPosition(undefined);
-        }
-    };
-
-    const updatePopupContent = (content) => {
-        const popupContentWithButton = `
-            <div>
-                ${content}
-                <button onclick="savePopupContent()" className="savebtn" title="Kaydet">Kaydet</button>
-                <button onclick="closePopup()" className="closebtn" title="Kapat">Kapat</button>
-            </div>
-        `;
-        setPopupContent(popupContentWithButton);
-        if (popup) {
-            popup.getElement().innerHTML = popupContentWithButton;
-        }
-        // savePopupContent'i tekrar window nesnesine ata
-        window.savePopupContent = handleSaveButtonClick;
-    };
     
     
 
@@ -194,8 +135,6 @@ const MapComponent = () => {
                     <PointDrawTool
                         map={map}
                         className="pointbtn"
-                        onStartDrawing={() => setIsDrawing(true)}
-                        onFinishDrawing={() => setIsDrawing(false)}
                     />
                     <PolygonDrawTool map={map} className="polygonbtn" />
                     <LineDrawTool map={map} className="linebtn" />

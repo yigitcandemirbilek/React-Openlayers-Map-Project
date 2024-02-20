@@ -204,6 +204,7 @@
     width: 0;
     position: absolute;
     pointer-events: none;
+    z-index: 99999;
   }
   .ol-popup:after {
     border-top-color: white;

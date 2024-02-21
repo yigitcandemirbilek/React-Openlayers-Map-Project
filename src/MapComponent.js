@@ -15,7 +15,7 @@ import PointDrawTool from './Tools/PointDrawTool';
 import PolygonDrawTool from './Tools/PolygonDrawTool';
 import LineDrawTool from './Tools/LineDrawTool';
 import { Toast } from 'primereact/toast';
-import { saveCoordinatesToPostgres } from './Api'; 
+import { saveCoordinatesToPostgres, getCoordinatesFromPostgres } from './Api'; 
 
 
 const MapComponent = () => {
@@ -168,16 +168,26 @@ const MapComponent = () => {
             try {
                 await saveCoordinatesToPostgres(clickedCoordinate);
                 toast.current.show({ severity: 'success', summary: 'Başarılı', detail: 'Koordinatlar tabloya kaydedildi.' });
-                console.log('Koordinatlar başarıyla PostgreSQL tablosuna kaydedildi.');
             } catch (error) {
                 toast.current.show({ severity: 'error', summary: 'Hata', detail: 'Koordinatları PostgreSQL tablosuna kaydetme başarısız oldu.' });
-                console.error('Koordinatları PostgreSQL tablosuna kaydetme başarısız oldu:', error);
             }
         };
         
     
         popupElement.appendChild(saveButton);
-    
+        
+        const getButton = document.createElement('button');
+        getButton.textContent = 'Getir';
+        getButton.onclick = async function () {
+            try {
+                const coordinates = await getCoordinatesFromPostgres();
+                console.log('PostgreSQL tablosundan alınan koordinatlar:', coordinates);
+            } catch (error) {
+                console.error('PostgreSQL tablosundan koordinatları alırken bir hata oluştu:', error);
+            }
+        };
+        popupElement.appendChild(getButton);
+
         const popupOverlay = new Overlay({
             element: popupElement,
             autoPan: {

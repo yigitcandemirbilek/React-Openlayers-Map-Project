@@ -1,3 +1,4 @@
+// axios ve ol kütüphanelerini içe aktar
 import axios from 'axios';
 import WKT from 'ol/format/WKT';
 import Point from 'ol/geom/Point';
@@ -18,6 +19,22 @@ export const saveCoordinatesToPostgres = async (coordinates) => {
     return response.data; // İsteğin döndürdüğü veriyi geri döndür
   } catch (error) {
     console.error('Error saving coordinates to PostgreSQL:', error);
+    throw error;
+  }
+};
+
+// PostgreSQL'den koordinatları almak için bir işlev
+export const getCoordinatesFromPostgres = async () => {
+  try {
+    // Axios ile GET isteği yaparak PostgreSQL'den koordinatları al
+    const response = await axios.get('https://localhost:7196/api/SpatialData');
+
+    // İşlem başarılı olduysa geri dönen veriyi konsola yazdır
+    console.log(response.data);
+    
+    return response.data; // İsteğin döndürdüğü veriyi geri döndür
+  } catch (error) {
+    console.error('Error getting coordinates from PostgreSQL:', error);
     throw error;
   }
 };

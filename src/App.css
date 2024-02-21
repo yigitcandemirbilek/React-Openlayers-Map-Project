@@ -256,6 +256,10 @@
     color: white;
 }
 
+.googlemaps-link:hover{
+    cursor: pointer;
+}
+
 .popup-button {
     display: inline-block;
     margin-right: 5px; /* İsteğe bağlı: butonlar arasına biraz boşluk eklemek için */

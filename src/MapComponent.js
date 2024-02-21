@@ -56,69 +56,69 @@ const MapComponent = () => {
         };
     }, []);
 
-    if (map) {
-        map.set('dblclickzoom', false); // Çift tıklama yakınlaştırmayı devre dışı bırak
-    
-        map.on('dblclick', function (evt) {
-            evt.preventDefault(); // Çift tıklama olayının varsayılan davranışını engelle
-    
+    if(map) {
+        map.on('singleclick', function (evt) {
             const clickedCoordinate = evt.coordinate;
-    
+        
             // Tıklanan yerde çizim var mı kontrol et
             const features = map.getFeaturesAtPixel(evt.pixel);
+        
             if (features && features.length > 0) {
-                const geometry = features[0].getGeometry();
-                if (geometry) {
-                    if (geometry.getType() === 'Point') {
-                        showPopup(geometry.getCoordinates());
-                    } else if (geometry.getType() === 'Polygon') {
-                        showPopup(geometry.getCoordinates()[0]);
-                    } else if (geometry.getType() === 'LineString') {
-                        showPopup(geometry.getCoordinates());
-                    }
-                }
+                const feature = features[0];
+                const geometry = feature.getGeometry();
+                const geometryType = geometry.getType();
+                showPopup(clickedCoordinate, geometryType);
             }
         });
+        
+        
     };
+        
     
-    const showPopup = (coordinates) => {
-        // Önce var olan popup'ları temizle
-        map.getOverlays().clear();
+
+    const showPopup = (coordinates, geometryType) => {
+        const popupElement = document.createElement('div');
+        popupElement.className = 'ol-popup';
+        const popupContent = document.createElement('div');
     
-        // Koordinatları düzgün bir şekilde biçimlendir
-        let formattedCoordinates = "";
-        if (Array.isArray(coordinates[0])) {
-            // Eğer koordinatlar bir dizi içinde başka diziler olarak verildiyse
-            formattedCoordinates = coordinates.map(coord => {
-                return coord.map(c => c.toFixed(2)).join(', ');
-            });
-        } else {
-            // Eğer koordinatlar doğrudan bir dizi olarak verildiyse
-            formattedCoordinates = coordinates.map(c => c.toFixed(2)).join(', ');
+        let popupText = '';
+        switch (geometryType) {
+            case 'Point':
+                popupText = `<p>Nokta Koordinatları:</p><ul><li>${coordinates}</li></ul>`;
+                break;
+            case 'Polygon':
+                popupText = `<p>Poligon Koordinatları:</p><ul>`;
+                coordinates.forEach(coord => {
+                    popupText += `<li>${coord}</li>`;
+                });
+                popupText += `</ul>`;
+                break;
+            case 'LineString':
+                popupText = `<p>Çizgi Koordinatları:</p><ul>`;
+                coordinates.forEach(coord => {
+                    popupText += `<li>${coord}</li>`;
+                });
+                popupText += `</ul>`;
+                break;
+            default:
+                popupText = `<p>Koordinatlar:</p><ul><li>${coordinates}</li></ul>`;
         }
     
-        // Popup içeriğini oluştur
-        const popupContent = document.createElement('div');
-        popupContent.className = 'ol-popup'; // Class ekle
-        popupContent.innerHTML = `<p>Koordinatlar:</p><ul><li>${formattedCoordinates}</li></ul>`;
+        popupContent.innerHTML = popupText;
+        popupElement.appendChild(popupContent);
     
-        // Overlay oluştur ve haritaya ekle
         const popupOverlay = new Overlay({
-            element: popupContent,
+            element: popupElement,
             autoPan: {
                 animation: {
                     duration: 250,
                 },
             },
         });
+    
         map.addOverlay(popupOverlay);
-    
-        // Popup'ı doğru koordinata yerleştir
-        popupOverlay.setPosition(coordinates[0][0]); // Poligonun ilk noktasını kullanarak pozisyon ayarla
+        popupOverlay.setPosition(coordinates);
     };
-    
-    
-    
     
     
 

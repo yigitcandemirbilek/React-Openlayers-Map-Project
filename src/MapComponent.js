@@ -5,8 +5,7 @@ import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
-import { Select } from 'ol/interaction';
-import { Modify } from 'ol/interaction';
+import Overlay from 'ol/Overlay';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Vector as VectorSource } from 'ol/source';
 import { fromLonLat } from 'ol/proj';
@@ -35,7 +34,7 @@ const MapComponent = () => {
                 zoom: 6.6,
             }),
         });
-    
+
         const vectorSource = new VectorSource({});
         const vectorLayer = new VectorLayer({
             source: vectorSource,
@@ -47,51 +46,79 @@ const MapComponent = () => {
                 'circle-fill-color': '#ffcc33',
             },
         });
-    
+
         initialMap.addLayer(vectorLayer);
-    
-        const modify = new Modify({ source: vectorSource });
-        initialMap.addInteraction(modify);
 
-        const select = new Select();
-        initialMap.addInteraction(select);
-    
-        const handleMapClick = (event) => {
-            const clickedCoordinate = event.coordinate;
-            console.log('Tıklanan Koordinatlar:', clickedCoordinate);
-        
-            const selectedFeatures = select.getFeatures();
-            if (selectedFeatures.getLength() > 0) {
-                const selectedFeature = selectedFeatures.item(0);
-                const geometry = selectedFeature.getGeometry();
-        
-                if (geometry.getType() === 'Point') {
-                    console.log('Tıklanan yer bir nokta çizimi.');
-                    console.log('Noktanın Koordinatları:', geometry.getCoordinates());
-                } else if (geometry.getType() === 'Polygon') {
-                    console.log('Tıklanan yer bir poligon çizimi.');
-                    console.log('Poligonun Koordinatları:', geometry.getCoordinates());
-                } else if (geometry.getType() === 'LineString') {
-                    console.log('Tıklanan yer bir çizgi çizimi.');
-                    console.log('Çizginin Koordinatları:', geometry.getCoordinates());
-                }
-            }
-        };
-        
-        
-        
-
-        select.on('select', handleMapClick); // Select olayı tetiklendiğinde handleMapClick fonksiyonunu çağırır.
-    
         setMap(initialMap);
-    
+
         return () => {
             initialMap.setTarget(null);
-            select.un('select', handleMapClick); // Etkinlik dinleyicisini kaldır.
         };
     }, []);
 
-
+    if (map) {
+        map.set('dblclickzoom', false); // Çift tıklama yakınlaştırmayı devre dışı bırak
+    
+        map.on('dblclick', function (evt) {
+            evt.preventDefault(); // Çift tıklama olayının varsayılan davranışını engelle
+    
+            const clickedCoordinate = evt.coordinate;
+    
+            // Tıklanan yerde çizim var mı kontrol et
+            const features = map.getFeaturesAtPixel(evt.pixel);
+            if (features && features.length > 0) {
+                const geometry = features[0].getGeometry();
+                if (geometry) {
+                    if (geometry.getType() === 'Point') {
+                        showPopup(geometry.getCoordinates());
+                    } else if (geometry.getType() === 'Polygon') {
+                        showPopup(geometry.getCoordinates()[0]);
+                    } else if (geometry.getType() === 'LineString') {
+                        showPopup(geometry.getCoordinates());
+                    }
+                }
+            }
+        });
+    };
+    
+    const showPopup = (coordinates) => {
+        // Önce var olan popup'ları temizle
+        map.getOverlays().clear();
+    
+        // Koordinatları düzgün bir şekilde biçimlendir
+        let formattedCoordinates = "";
+        if (Array.isArray(coordinates[0])) {
+            // Eğer koordinatlar bir dizi içinde başka diziler olarak verildiyse
+            formattedCoordinates = coordinates.map(coord => {
+                return coord.map(c => c.toFixed(2)).join(', ');
+            });
+        } else {
+            // Eğer koordinatlar doğrudan bir dizi olarak verildiyse
+            formattedCoordinates = coordinates.map(c => c.toFixed(2)).join(', ');
+        }
+    
+        // Popup içeriğini oluştur
+        const popupContent = document.createElement('div');
+        popupContent.className = 'ol-popup'; // Class ekle
+        popupContent.innerHTML = `<p>Koordinatlar:</p><ul><li>${formattedCoordinates}</li></ul>`;
+    
+        // Overlay oluştur ve haritaya ekle
+        const popupOverlay = new Overlay({
+            element: popupContent,
+            autoPan: {
+                animation: {
+                    duration: 250,
+                },
+            },
+        });
+        map.addOverlay(popupOverlay);
+    
+        // Popup'ı doğru koordinata yerleştir
+        popupOverlay.setPosition(coordinates[0][0]); // Poligonun ilk noktasını kullanarak pozisyon ayarla
+    };
+    
+    
+    
     
     
 
@@ -125,7 +152,6 @@ const MapComponent = () => {
             });
         });
     };
-    
     
 
     return (

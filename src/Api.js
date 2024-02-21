@@ -2,21 +2,27 @@
 import axios from 'axios';
 import WKT from 'ol/format/WKT';
 import Point from 'ol/geom/Point';
+import Polygon from 'ol/geom/Polygon';
+import LineString from 'ol/geom/LineString';
+
 
 // PostgreSQL tablosuna koordinatları kaydetmek için bir işlev
-export const saveCoordinatesToPostgres = async (coordinates) => {
+export const saveCoordinatesToPostgres = async (coordinatesArray) => {
   try {
-    // Koordinatları WKT formatına dönüştür
-    const wktFormat = new WKT();
-    const wktGeometry = wktFormat.writeGeometry(new Point(coordinates));
-
-    // Axios ile POST isteği yaparak koordinatları PostgreSQL'e kaydet
-    const response = await axios.post('https://localhost:7196/api/SpatialData', { wkt: wktGeometry });
+    // Axios ile koordinatları PostgreSQL'e tek tek kaydet
+    const responses = await Promise.all(coordinatesArray.map(async (coordinates) => {
+      // Koordinatları WKT formatına dönüştür
+      const wktFormat = new WKT();
+      const wktGeometry = wktFormat.writeGeometry(new Point(coordinates));
+      
+      // Axios ile POST isteği yaparak koordinatları PostgreSQL'e kaydet
+      return axios.post('https://localhost:7196/api/SpatialData', { wkt: wktGeometry });
+    }));
 
     // İşlem başarılı olduysa geri dönen veriyi konsola yazdır
-    console.log(response.data);
-    
-    return response.data; // İsteğin döndürdüğü veriyi geri döndür
+    responses.forEach(response => console.log(response.data));
+
+    return responses.map(response => response.data); // İsteğin döndürdüğü veriyi geri döndür
   } catch (error) {
     console.error('Error saving coordinates to PostgreSQL:', error);
     throw error;

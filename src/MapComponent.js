@@ -166,12 +166,34 @@ const MapComponent = () => {
         saveButton.textContent = 'Kaydet';
         saveButton.onclick = async function () {
             try {
-                await saveCoordinatesToPostgres(clickedCoordinate);
+                let allCoordinates = [];
+                
+                // Haritadaki tüm vektör katmanlarını al
+                map.getLayers().forEach(layer => {
+                    if (layer instanceof VectorLayer) {
+                        const source = layer.getSource();
+                        const features = source.getFeatures();
+                        
+                        // Her bir özellik için geometri türünü kontrol et
+                        features.forEach(feature => {
+                            const geometry = feature.getGeometry();
+                            const coordinates = getFeatureCoordinates(geometry);
+                            allCoordinates = allCoordinates.concat(coordinates);
+                        });
+                    }
+                });
+                
+                // Tüm koordinatları PostgreSQL'e kaydet
+                await saveCoordinatesToPostgres(allCoordinates);
+                
+                // Başarılı mesajını göster
                 toast.current.show({ severity: 'success', summary: 'Başarılı', detail: 'Koordinatlar tabloya kaydedildi.' });
             } catch (error) {
+                // Hata mesajını göster
                 toast.current.show({ severity: 'error', summary: 'Hata', detail: 'Koordinatları PostgreSQL tablosuna kaydetme başarısız oldu.' });
             }
         };
+        
         
     
         popupElement.appendChild(saveButton);

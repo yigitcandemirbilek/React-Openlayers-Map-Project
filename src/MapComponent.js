@@ -77,6 +77,11 @@ const MapComponent = () => {
     
 
     const showPopup = (coordinates, geometryType) => {
+        // Öncelikle mevcut pop-up'ı kapat
+        const existingPopups = document.querySelectorAll('.ol-popup');
+        existingPopups.forEach(popup => popup.remove());
+    
+        // Yeni pop-up'ı oluştur
         const popupElement = document.createElement('div');
         popupElement.className = 'ol-popup';
         const popupContent = document.createElement('div');
@@ -119,6 +124,7 @@ const MapComponent = () => {
         map.addOverlay(popupOverlay);
         popupOverlay.setPosition(coordinates);
     };
+    
     
     
 

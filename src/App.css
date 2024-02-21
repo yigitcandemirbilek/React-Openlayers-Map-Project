@@ -256,6 +256,12 @@
     color: white;
 }
 
+.popup-button {
+    display: inline-block;
+    margin-right: 5px; /* İsteğe bağlı: butonlar arasına biraz boşluk eklemek için */
+}
+
+
 /* Mesafe ölçme popupının cssleri */
 
 .distance-info {

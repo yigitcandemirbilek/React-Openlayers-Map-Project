@@ -15,6 +15,8 @@ import PointDrawTool from './Tools/PointDrawTool';
 import PolygonDrawTool from './Tools/PolygonDrawTool';
 import LineDrawTool from './Tools/LineDrawTool';
 import { Toast } from 'primereact/toast';
+import { saveCoordinatesToPostgres } from './Api'; 
+
 
 const MapComponent = () => {
     const turkeyCenter = fromLonLat([35.1683, 37.1616]);
@@ -75,15 +77,15 @@ const MapComponent = () => {
     }, [map]);
     
 
-    const decimalToDMS = (coordinate) => {
-        const direction = coordinate >= 0 ? 'N' : 'S';
+    const decimalToDMS = (coordinate, isLongitude) => {
+        const direction = isLongitude ? (coordinate >= 0 ? 'E' : 'W') : (coordinate >= 0 ? 'N' : 'S');
         coordinate = Math.abs(coordinate);
         const degrees = Math.floor(coordinate);
         const minutes = Math.floor((coordinate - degrees) * 60);
-        const seconds = ((coordinate - degrees - (minutes / 60)) * 3600).toFixed(2);
-        return `${degrees}° ${minutes}' ${seconds}" ${direction}`;
+        const seconds = ((coordinate - degrees - (minutes / 60)) * 3600).toFixed(1);
+        return `${degrees}° ${minutes}' ${Math.abs(seconds)}" ${direction}`;
     };
-
+    
     const getFeatureCoordinates = (geometry) => {
         let coordinates = [];
         geometry.getCoordinates().forEach(coord => {
@@ -101,22 +103,22 @@ const MapComponent = () => {
     const showPopup = (clickedCoordinate, coordinates, geometryType) => {
         const existingPopups = document.querySelectorAll('.ol-popup');
         existingPopups.forEach(popup => popup.remove());
-
+    
         const popupElement = document.createElement('div');
         popupElement.className = 'ol-popup';
         const popupContent = document.createElement('div');
-
+    
         let popupText = '';
         switch (geometryType) {
             case 'Point':
                 const wgs84Coordinate = transform(clickedCoordinate, 'EPSG:3857', 'EPSG:4326');
-                popupText = `<p>Nokta Koordinatları:</p><ul><li>${decimalToDMS(wgs84Coordinate[1])}, ${decimalToDMS(wgs84Coordinate[0])}</li></ul>`;
+                popupText = `<p>Nokta Koordinatları:</p><ul><li>${decimalToDMS(wgs84Coordinate[1], false)}, ${decimalToDMS(wgs84Coordinate[0], true)}</li></ul>`;
                 break;
             case 'Polygon':
                 popupText = `<p>Poligon Koordinatları:</p><ul>`;
                 coordinates.forEach(coord => {
                     const wgs84Coordinate = transform(coord, 'EPSG:3857', 'EPSG:4326');
-                    popupText += `<li>${decimalToDMS(wgs84Coordinate[1])}, ${decimalToDMS(wgs84Coordinate[0])}</li>`;
+                    popupText += `<li>${decimalToDMS(wgs84Coordinate[1], false)}, ${decimalToDMS(wgs84Coordinate[0], true)}</li>`;
                 });
                 popupText += `</ul>`;
                 break;
@@ -124,14 +126,14 @@ const MapComponent = () => {
                 popupText = `<p>Çizgi Koordinatları:</p><ul>`;
                 coordinates.forEach(coord => {
                     const wgs84Coordinate = transform(coord, 'EPSG:3857', 'EPSG:4326');
-                    popupText += `<li>${decimalToDMS(wgs84Coordinate[1])}, ${decimalToDMS(wgs84Coordinate[0])}</li>`;
+                    popupText += `<li>${decimalToDMS(wgs84Coordinate[1], false)}, ${decimalToDMS(wgs84Coordinate[0], true)}</li>`;
                 });
                 popupText += `</ul>`;
                 break;
             default:
                 popupText = `<p>Koordinatlar:</p><ul><li>${coordinates}</li></ul>`;
         }
-
+    
         const closer = document.createElement('a');
         closer.href = '#';
         closer.className = 'ol-popup-closer';
@@ -141,10 +143,11 @@ const MapComponent = () => {
             return false;
         };
         popupElement.appendChild(closer);
-
+    
         popupContent.innerHTML = popupText;
         popupElement.appendChild(popupContent);
-
+        
+    
         const googleMapsLink = document.createElement('a');
         googleMapsLink.href = '#';
         googleMapsLink.classList = "googlemaps-link";
@@ -155,7 +158,26 @@ const MapComponent = () => {
             return false;
         };
         popupElement.appendChild(googleMapsLink);
-
+    
+        const br = document.createElement('br');
+        popupElement.appendChild(br);
+    
+        const saveButton = document.createElement('button');
+        saveButton.textContent = 'Kaydet';
+        saveButton.onclick = async function () {
+            try {
+                await saveCoordinatesToPostgres(clickedCoordinate);
+                toast.current.show({ severity: 'success', summary: 'Başarılı', detail: 'Koordinatlar tabloya kaydedildi.' });
+                console.log('Koordinatlar başarıyla PostgreSQL tablosuna kaydedildi.');
+            } catch (error) {
+                toast.current.show({ severity: 'error', summary: 'Hata', detail: 'Koordinatları PostgreSQL tablosuna kaydetme başarısız oldu.' });
+                console.error('Koordinatları PostgreSQL tablosuna kaydetme başarısız oldu:', error);
+            }
+        };
+        
+    
+        popupElement.appendChild(saveButton);
+    
         const popupOverlay = new Overlay({
             element: popupElement,
             autoPan: {
@@ -164,10 +186,14 @@ const MapComponent = () => {
                 },
             },
         });
-
+    
         map.addOverlay(popupOverlay);
         popupOverlay.setPosition(clickedCoordinate);
     };
+    
+
+    
+    
 
     const openGoogleMaps = (latitude, longitude) => {
         const coordinates = `${latitude},${longitude}`;

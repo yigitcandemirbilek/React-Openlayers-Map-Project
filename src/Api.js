@@ -1,29 +1,16 @@
-// api.js
-
 import axios from 'axios';
-
-
+import WKT from 'ol/format/WKT';
+import Point from 'ol/geom/Point';
 
 // PostgreSQL tablosuna koordinatları kaydetmek için bir işlev
 export const saveCoordinatesToPostgres = async (coordinates) => {
   try {
-    // Koordinatları geoJSON formatına dönüştür
-    const geoJsonData = {
-      type: 'FeatureCollection',
-      features: [
-        {
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: coordinates,
-          },
-          properties: {},
-        },
-      ],
-    };
+    // Koordinatları WKT formatına dönüştür
+    const wktFormat = new WKT();
+    const wktGeometry = wktFormat.writeGeometry(new Point(coordinates));
 
     // Axios ile POST isteği yaparak koordinatları PostgreSQL'e kaydet
-    const response = await axios.post('https://localhost:7196/api/SpatialData', geoJsonData);
+    const response = await axios.post('https://localhost:7196/api/SpatialData', { wkt: wktGeometry });
 
     // İşlem başarılı olduysa geri dönen veriyi konsola yazdır
     console.log(response.data);

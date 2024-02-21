@@ -20,6 +20,7 @@ const MapComponent = () => {
     const turkeyCenter = fromLonLat([35.1683, 37.1616]);
     const [map, setMap] = useState(null);
     const toast = useRef(null);
+    
 
     useEffect(() => {
         const initialMap = new Map({
@@ -56,27 +57,49 @@ const MapComponent = () => {
         };
     }, []);
 
-    if(map) {
+    useEffect(() => {
+        // Eğer map nesnesi tanımlı ise çift tıklama olayını engelle
+        if (map) {
+            map.getViewport().addEventListener('dblclick', function (event) {
+                event.preventDefault();
+            });
+        }
+    }, [map]);
+
+    if (map) {
         map.on('singleclick', function (evt) {
             const clickedCoordinate = evt.coordinate;
-        
+            
             // Tıklanan yerde çizim var mı kontrol et
             const features = map.getFeaturesAtPixel(evt.pixel);
-        
+            
             if (features && features.length > 0) {
                 const feature = features[0];
                 const geometry = feature.getGeometry();
                 const geometryType = geometry.getType();
-                showPopup(clickedCoordinate, geometryType);
+                const coordinates = getFeatureCoordinates(geometry);
+                showPopup(clickedCoordinate, coordinates, geometryType);
             }
         });
-        
-        
-    };
-        
+    }
     
-
-    const showPopup = (coordinates, geometryType) => {
+    const getFeatureCoordinates = (geometry) => {
+        let coordinates = [];
+        geometry.getCoordinates().forEach(coord => {
+            if (Array.isArray(coord[0])) {
+                // Çokgen ya da çoklu halka
+                coord.forEach(subCoord => {
+                    coordinates.push(subCoord);
+                });
+            } else {
+                // Nokta ya da çizgi
+                coordinates.push(coord);
+            }
+        });
+        return coordinates;
+    };
+    
+    const showPopup = (clickedCoordinate, coordinates, geometryType) => {
         // Öncelikle mevcut pop-up'ı kapat
         const existingPopups = document.querySelectorAll('.ol-popup');
         existingPopups.forEach(popup => popup.remove());
@@ -133,9 +156,8 @@ const MapComponent = () => {
         });
     
         map.addOverlay(popupOverlay);
-        popupOverlay.setPosition(coordinates);
+        popupOverlay.setPosition(clickedCoordinate);
     };
-    
     
     
     

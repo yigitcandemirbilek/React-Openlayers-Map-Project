@@ -8,7 +8,7 @@ import OSM from 'ol/source/OSM';
 import Overlay from 'ol/Overlay';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Vector as VectorSource } from 'ol/source';
-import { fromLonLat } from 'ol/proj';
+import { fromLonLat, transform } from 'ol/proj';
 import html2canvas from 'html2canvas';
 import { CameraOutlined } from '@ant-design/icons';
 import PointDrawTool from './Tools/PointDrawTool';
@@ -20,7 +20,6 @@ const MapComponent = () => {
     const turkeyCenter = fromLonLat([35.1683, 37.1616]);
     const [map, setMap] = useState(null);
     const toast = useRef(null);
-    
 
     useEffect(() => {
         const initialMap = new Map({
@@ -58,81 +57,81 @@ const MapComponent = () => {
     }, []);
 
     useEffect(() => {
-        // Eğer map nesnesi tanımlı ise çift tıklama olayını engelle
         if (map) {
-            map.getViewport().addEventListener('dblclick', function (event) {
-                event.preventDefault();
+            map.on('singleclick', function (evt) {
+                const clickedCoordinate = evt.coordinate;
+                
+                const features = map.getFeaturesAtPixel(evt.pixel);
+                
+                if (features && features.length > 0) {
+                    const feature = features[0];
+                    const geometry = feature.getGeometry();
+                    const geometryType = geometry.getType();
+                    const coordinates = getFeatureCoordinates(geometry);
+                    showPopup(clickedCoordinate, coordinates, geometryType);
+                }
             });
         }
     }, [map]);
-
-    if (map) {
-        map.on('singleclick', function (evt) {
-            const clickedCoordinate = evt.coordinate;
-            
-            // Tıklanan yerde çizim var mı kontrol et
-            const features = map.getFeaturesAtPixel(evt.pixel);
-            
-            if (features && features.length > 0) {
-                const feature = features[0];
-                const geometry = feature.getGeometry();
-                const geometryType = geometry.getType();
-                const coordinates = getFeatureCoordinates(geometry);
-                showPopup(clickedCoordinate, coordinates, geometryType);
-            }
-        });
-    }
     
+
+    const decimalToDMS = (coordinate) => {
+        const direction = coordinate >= 0 ? 'N' : 'S';
+        coordinate = Math.abs(coordinate);
+        const degrees = Math.floor(coordinate);
+        const minutes = Math.floor((coordinate - degrees) * 60);
+        const seconds = ((coordinate - degrees - (minutes / 60)) * 3600).toFixed(2);
+        return `${degrees}° ${minutes}' ${seconds}" ${direction}`;
+    };
+
     const getFeatureCoordinates = (geometry) => {
         let coordinates = [];
         geometry.getCoordinates().forEach(coord => {
             if (Array.isArray(coord[0])) {
-                // Çokgen ya da çoklu halka
                 coord.forEach(subCoord => {
                     coordinates.push(subCoord);
                 });
             } else {
-                // Nokta ya da çizgi
                 coordinates.push(coord);
             }
         });
         return coordinates;
     };
-    
+
     const showPopup = (clickedCoordinate, coordinates, geometryType) => {
-        // Öncelikle mevcut pop-up'ı kapat
         const existingPopups = document.querySelectorAll('.ol-popup');
         existingPopups.forEach(popup => popup.remove());
-    
-        // Yeni pop-up'ı oluştur
+
         const popupElement = document.createElement('div');
         popupElement.className = 'ol-popup';
         const popupContent = document.createElement('div');
-    
+
         let popupText = '';
         switch (geometryType) {
             case 'Point':
-                popupText = `<p>Nokta Koordinatları:</p><ul><li>${coordinates}</li></ul>`;
+                const wgs84Coordinate = transform(clickedCoordinate, 'EPSG:3857', 'EPSG:4326');
+                popupText = `<p>Nokta Koordinatları:</p><ul><li>${decimalToDMS(wgs84Coordinate[1])}, ${decimalToDMS(wgs84Coordinate[0])}</li></ul>`;
                 break;
             case 'Polygon':
                 popupText = `<p>Poligon Koordinatları:</p><ul>`;
                 coordinates.forEach(coord => {
-                    popupText += `<li>${coord}</li>`;
+                    const wgs84Coordinate = transform(coord, 'EPSG:3857', 'EPSG:4326');
+                    popupText += `<li>${decimalToDMS(wgs84Coordinate[1])}, ${decimalToDMS(wgs84Coordinate[0])}</li>`;
                 });
                 popupText += `</ul>`;
                 break;
             case 'LineString':
                 popupText = `<p>Çizgi Koordinatları:</p><ul>`;
                 coordinates.forEach(coord => {
-                    popupText += `<li>${coord}</li>`;
+                    const wgs84Coordinate = transform(coord, 'EPSG:3857', 'EPSG:4326');
+                    popupText += `<li>${decimalToDMS(wgs84Coordinate[1])}, ${decimalToDMS(wgs84Coordinate[0])}</li>`;
                 });
                 popupText += `</ul>`;
                 break;
             default:
                 popupText = `<p>Koordinatlar:</p><ul><li>${coordinates}</li></ul>`;
         }
-    
-        // Close button
+
         const closer = document.createElement('a');
         closer.href = '#';
         closer.className = 'ol-popup-closer';
@@ -142,10 +141,21 @@ const MapComponent = () => {
             return false;
         };
         popupElement.appendChild(closer);
-    
+
         popupContent.innerHTML = popupText;
         popupElement.appendChild(popupContent);
-    
+
+        const googleMapsLink = document.createElement('a');
+        googleMapsLink.href = '#';
+        googleMapsLink.classList = "googlemaps-link";
+        googleMapsLink.textContent = 'Google Haritalar\'da Görüntüle';
+        googleMapsLink.onclick = function () {
+            const [longitude, latitude] = transform(clickedCoordinate, 'EPSG:3857', 'EPSG:4326');
+            openGoogleMaps(latitude, longitude);
+            return false;
+        };
+        popupElement.appendChild(googleMapsLink);
+
         const popupOverlay = new Overlay({
             element: popupElement,
             autoPan: {
@@ -154,13 +164,16 @@ const MapComponent = () => {
                 },
             },
         });
-    
+
         map.addOverlay(popupOverlay);
         popupOverlay.setPosition(clickedCoordinate);
     };
-    
-    
-    
+
+    const openGoogleMaps = (latitude, longitude) => {
+        const coordinates = `${latitude},${longitude}`;
+        const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${coordinates}`;
+        window.open(googleMapsUrl, "_blank");
+    };
 
     const handleClearButtonClick = () => {
         const vectorSource = map.getLayers().item(1).getSource();
@@ -192,7 +205,6 @@ const MapComponent = () => {
             });
         });
     };
-    
 
     return (
         <div id="map" style={{ width: "100%", height: "1000px" }}>

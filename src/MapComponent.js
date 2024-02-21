@@ -109,6 +109,17 @@ const MapComponent = () => {
                 popupText = `<p>Koordinatlar:</p><ul><li>${coordinates}</li></ul>`;
         }
     
+        // Close button
+        const closer = document.createElement('a');
+        closer.href = '#';
+        closer.className = 'ol-popup-closer';
+        closer.onclick = function () {
+            popupOverlay.setPosition(undefined);
+            closer.blur();
+            return false;
+        };
+        popupElement.appendChild(closer);
+    
         popupContent.innerHTML = popupText;
         popupElement.appendChild(popupContent);
     
@@ -124,6 +135,7 @@ const MapComponent = () => {
         map.addOverlay(popupOverlay);
         popupOverlay.setPosition(coordinates);
     };
+    
     
     
     

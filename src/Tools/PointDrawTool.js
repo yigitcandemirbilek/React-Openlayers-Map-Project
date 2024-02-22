@@ -1,142 +1,56 @@
-// PointDrawTool.js
-
-import React, { useRef, useEffect, useCallback } from 'react';
-import Overlay from 'ol/Overlay';
+import React, { useRef } from 'react';
 import { Draw } from 'ol/interaction';
 import { deactivateDrawTools } from './DeactiveDrawTools';
 import { Point } from 'ol/geom';
-import { Feature } from 'ol';
-import { transform } from 'ol/proj';
-import { saveCoordinatesToPostgres } from '../Api'; 
-import WKT from "ol/format/WKT";
+import { Feature } from 'ol'; 
 
-
+// PointDrawTool bileşeni, haritada nokta çizim aracını sağlar
 const PointDrawTool = ({ map }) => {
-  const drawPointInteraction = useRef(null);
-  const popupOverlayRef = useRef(null);
-  const closerRef = useRef(null);
+  const drawPointInteraction = useRef(null); // Nokta çizim etkileşimi için referans
 
-  const handleSaveButtonClick = async () => {
-    const coordinate = popupOverlayRef.current.getPosition();
-    if (!coordinate) return;
-    const wgs84Coordinate = transform(coordinate, 'EPSG:3857', 'EPSG:4326');
-
-    try {
-      await saveCoordinatesToPostgres(wgs84Coordinate);
-      console.log('Nokta kaydedildi');
-    } catch (error) {
-      console.error('Error saving coordinates:', error);
-    }
-  };
-
+  // Nokta çizim aracını etkinleştirme fonksiyonu
   const activatePointDrawTool = () => {
-    deactivateDrawTools();
+    deactivateDrawTools(); // Diğer çizim araçlarını devre dışı bırak
 
+    // Nokta çizim etkileşimini oluştur
     const draw = new Draw({
-      source: map.getLayers().item(1).getSource(),
-      type: 'Point',
+      source: map.getLayers().item(1).getSource(), // Harita katmanından veri kaynağını al
+      type: 'Point', // Tür: Nokta
     });
 
-    
-    const convertToWkt = (feature, wktProjection, featureProjection) => {
-
-    
-      return new WKT().writeGeometry(feature.getGeometry(), {
-          dataProjection: wktProjection,
-          featureProjection: featureProjection,
-      });
-    };
-
+    // Çizim tamamlandığında
     draw.on('drawend', (event) => {
       if (drawPointInteraction.current) {
+        // Eğer önceki bir çizim etkileşimi varsa, kaldır
         map.removeInteraction(drawPointInteraction.current);
         drawPointInteraction.current = null;
       }
 
+      // Çizilen noktanın koordinatlarını al
       const pointCoordinates = event.feature.getGeometry().getCoordinates();
-      const pointGeometry = new Point(pointCoordinates);
+      const pointGeometry = new Point(pointCoordinates); // Nokta geometrisi oluştur
 
+      // Feature objesi oluştur ve geometriyi ayarla
       const feature = new Feature({
         geometry: pointGeometry,
       });
-      
-      feature.set("isOverlay", true);
 
+      feature.set("isOverlay", true); // Feature'ı overlay olarak işaretle
 
+      // Harita katmanına feature ekle
       map.getLayers().item(1).getSource().addFeature(feature);
-
-      map.un('click', handleMapClick);
-      setTimeout(() => {
-        map.on('click', handleMapClick);
-      }, 0);
     });
 
-    map.addInteraction(draw);
-    drawPointInteraction.current = draw;
+    map.addInteraction(draw); // Çizim etkileşimini haritaya ekle
+    drawPointInteraction.current = draw; // Ref'i güncelle
   };
 
-  const handleMapClick = useCallback((event) => {
-    const pixel = map.getEventPixel(event.originalEvent);
-    const coordinate = map.getEventCoordinate(event.originalEvent);
-    const feature = map.forEachFeatureAtPixel(pixel, (feat) => feat);
-
-    if (feature && feature.get("isOverlay" === true)) {
-      const wgs84Coordinate = transform(coordinate, 'EPSG:3857', 'EPSG:4326');
-      const coordinatesText = `${wgs84Coordinate[1]}, ${wgs84Coordinate[0]}`;
-
-      popupOverlayRef.current.setPosition(coordinate);
-
-      const content = document.createElement('div');
-      content.innerHTML = `
-        <p>Koordinatlar: ${coordinatesText}</p>
-        <button id="saveButton">Kaydet</button>
-      `;
-      popupOverlayRef.current.getElement().innerHTML = '';
-      popupOverlayRef.current.getElement().appendChild(content);
-      popupOverlayRef.current.getElement().appendChild(closerRef.current);
-
-      const saveButton = content.querySelector('#saveButton');
-      saveButton.addEventListener('click', handleSaveButtonClick);
-    } else {
-      popupOverlayRef.current.setPosition(undefined);
-    }
-  }, [map, popupOverlayRef, closerRef, transform]);
-
-  useEffect(() => {
-    if (!map) return;
-
-    const popupElement = document.createElement('div');
-    popupElement.className = 'ol-popup';
-
-    popupOverlayRef.current = new Overlay({
-      element: popupElement,
-      autoPan: true,
-      autoPanAnimation: {
-        duration: 250,
-      },
-    });
-    map.addOverlay(popupOverlayRef.current);
-
-    closerRef.current = document.createElement('a');
-    closerRef.current.href = '#';
-    closerRef.current.className = 'ol-popup-closer';
-    closerRef.current.onclick = () => {
-      popupOverlayRef.current.setPosition(undefined);
-      return false;
-    };
-    popupElement.appendChild(closerRef.current);
-
-    map.on('click', handleMapClick);
-
-    return () => {
-      map.un('click', handleMapClick);
-    };
-  }, [map, handleMapClick, popupOverlayRef, closerRef]);
-
+  // Nokta çizim butonu tıklandığında
   const handlePointDrawButtonClick = () => {
-    activatePointDrawTool();
+    activatePointDrawTool(); // Nokta çizim aracını etkinleştir
   };
 
+  // Butonun return edildiği ve tıklama olayının eklendiği yer
   return (
     <div>
       <button

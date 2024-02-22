@@ -16,12 +16,19 @@ import PolygonDrawTool from './Tools/PolygonDrawTool';
 import LineDrawTool from './Tools/LineDrawTool';
 import { Toast } from 'primereact/toast';
 import { saveCoordinatesToPostgres, getCoordinatesFromPostgres } from './Api'; 
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import "primereact/resources/themes/lara-light-cyan/theme.css";
+
+        
 
 
 const MapComponent = () => {
     const turkeyCenter = fromLonLat([35.1683, 37.1616]);
     const [map, setMap] = useState(null);
     const toast = useRef(null);
+    const [coordinatesFromPostgres, setCoordinatesFromPostgres] = useState([]);
+
 
     useEffect(() => {
         const initialMap = new Map({
@@ -203,11 +210,12 @@ const MapComponent = () => {
         getButton.onclick = async function () {
             try {
                 const coordinates = await getCoordinatesFromPostgres();
-                console.log('PostgreSQL tablosundan alınan koordinatlar:', coordinates);
+                setCoordinatesFromPostgres(coordinates); // Postgres'ten alınan koordinatları state'e ekleyin
             } catch (error) {
                 console.error('PostgreSQL tablosundan koordinatları alırken bir hata oluştu:', error);
             }
         };
+        
         popupElement.appendChild(getButton);
 
         const popupOverlay = new Overlay({
@@ -266,6 +274,12 @@ const MapComponent = () => {
 
     return (
         <div id="map" style={{ width: "100%", height: "1000px" }}>
+             <div className="table-container">
+            <DataTable value={coordinatesFromPostgres}>
+                <Column field="latitude" header="Enlem" />
+                <Column field="longitude" header="Boylam" />
+            </DataTable>
+        </div>
             <div className="toolbar">
                 <div className="toolbar-content">
                     <PointDrawTool

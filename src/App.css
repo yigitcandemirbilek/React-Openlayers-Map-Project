@@ -10,6 +10,11 @@
 /* Toolbarın cssleri*/
 
 
+#map {
+    position: relative;
+}
+
+
 .toolbar-content {
     position: absolute;
     margin-left:655px;
@@ -286,6 +291,37 @@
     padding: 5px 10px; 
 }
 
+/* Koordinat tablosunun cssleri */
+
+.table-container {
+    position: absolute;
+    top: 30%;
+    right: 20px;
+    transform: translateY(-50%);
+    z-index: 9999;
+    background-color: var(--primary-btn-color); /* Arka plan rengi */
+    padding: 20px; /* İç boşluk */
+    border-radius: 5px; /* Kenar yuvarlatma */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Gölge */
+}
+
+.table-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-container th,
+.table-container td {
+    border: 1px solid white;
+    padding: 8px;
+    text-align: left;
+}
+
+.table-container th {
+    background-color: #f2f2f2; /* Başlık arka plan rengi */
+}
+
+/* İstediğiniz diğer stillendirme kuralları */
 
 
 

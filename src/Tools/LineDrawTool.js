@@ -6,24 +6,29 @@ import { LineString } from 'ol/geom';
 import { getLength } from 'ol/sphere';
 import { Feature } from 'ol';
 
+// LineDrawTool bileşeni, haritada çizgi çizim aracını sağlar
 const LineDrawTool = ({ map }) => {
-    const popupOverlayRef = useRef(null);
-    const isNewLineAdded = useRef(false);
-    const measureTooltipRef = useRef(null);
+    const popupOverlayRef = useRef(null); // Overlay için referans
+    const isNewLineAdded = useRef(false); // Yeni çizgi eklendi mi?
+    const measureTooltipRef = useRef(null); // Ölçüm işaretçisi için referans
 
-    let drawLineInteraction;
+    let drawLineInteraction; // Çizgi çizim etkileşimi
 
+    // Çizgi çizim aracını etkinleştirme fonksiyonu
     const activateLineDrawTool = () => {
-        deactivateDrawTools();
+        deactivateDrawTools(); // Diğer çizim araçlarını devre dışı bırak
+
         drawLineInteraction = new Draw({
-            source: map.getLayers().item(1).getSource(),
-            type: 'LineString',
+            source: map.getLayers().item(1).getSource(), // Harita katmanından veri kaynağını al
+            type: 'LineString', // Tür: Çizgi
         });
 
+        // Çizim başladığında
         drawLineInteraction.on('drawstart', (event) => {
-            isNewLineAdded.current = false;
-            map.removeOverlay(measureTooltipRef.current);
+            isNewLineAdded.current = false; // Yeni çizgi eklenmedi
+            map.removeOverlay(measureTooltipRef.current); // Önceki ölçüm işaretçisini kaldır
 
+            // Ölçüm işaretçisi oluştur
             const tooltipElement = document.createElement('div');
             tooltipElement.className = 'ol-tooltip ol-tooltip-measure';
             measureTooltipRef.current = new Overlay({
@@ -33,54 +38,74 @@ const LineDrawTool = ({ map }) => {
             });
             map.addOverlay(measureTooltipRef.current);
 
+            // Çizim değiştiğinde
             event.feature.on('change', (evt) => {
-                const geom = evt.target.getGeometry();
+                const geom = evt.target.getGeometry(); // Geometriyi al
                 const length = getLength(geom, {
-                    projection: map.getView().getProjection(),
-                    radius: 6371,
+                    projection: map.getView().getProjection(), // Projeksiyonu al
+                    radius: 6371, // Yarıçap
                 });
-                const output = `${length.toFixed(2)} km`;
-                const tooltipCoord = geom.getLastCoordinate();
-                tooltipElement.innerHTML = `<span>${output}</span>`;
-                measureTooltipRef.current.setPosition(tooltipCoord);
+                const output = `${length.toFixed(2)} km`; // Mesafeyi hesapla
+                const tooltipCoord = geom.getLastCoordinate(); // İşaretçi koordinatını al
+                tooltipElement.innerHTML = `<span>${output}</span>`; // HTML içeriğini ayarla
+                measureTooltipRef.current.setPosition(tooltipCoord); // İşaretçi pozisyonunu ayarla
             });
         });
 
+        // Çizim tamamlandığında
         drawLineInteraction.on('drawend', (event) => {
-            isNewLineAdded.current = true;
-            map.removeOverlay(measureTooltipRef.current);
-            map.removeInteraction(drawLineInteraction);
+            isNewLineAdded.current = true; // Yeni çizgi eklendi
+            map.removeOverlay(measureTooltipRef.current); // Ölçüm işaretçisini kaldır
+            map.removeInteraction(drawLineInteraction); // Çizim etkileşimini kaldır
 
-            const geometry = event.feature.getGeometry();
+            const geometry = event.feature.getGeometry(); // Geometriyi al
             const length = getLength(geometry, {
-                projection: map.getView().getProjection(),
-                radius: 6371,
+                projection: map.getView().getProjection(), // Projeksiyonu al
+                radius: 6371, // Yarıçap
             });
 
-            const output = `${length.toFixed(2)} km`;
+            const output = `${length.toFixed(2)} km`; // Mesafeyi hesapla
 
             const feature = new Feature({
-                geometry: new LineString(geometry.getCoordinates()),
+                geometry: new LineString(geometry.getCoordinates()), // Geometriyi ayarla
             });
-            map.getLayers().item(1).getSource().addFeature(feature);
+            map.getLayers().item(1).getSource().addFeature(feature); // Feature'ı harita katmanına ekle
+
+            // Yeni kod
+            const content = document.createElement('div'); // İçerik oluştur
+            content.innerHTML = `<p class="distance-info">Mesafe: ${output}</p><a href="#" class="distance-info-close-button">x</a>`; // HTML içeriğini ayarla
+            content.querySelector('.distance-info-close-button').addEventListener('click', () => {
+                map.removeOverlay(popup); // Popup'ı kaldır
+            });
+
+            const popup = new Overlay({
+                element: content,
+                positioning: 'bottom-center',
+                offset: [0, -15],
+            });
+
+            popup.setPosition(geometry.getLastCoordinate()); // Popup pozisyonunu ayarla
+            map.addOverlay(popup); // Popup'ı haritaya ekle
         });
 
-        map.addInteraction(drawLineInteraction);
+        map.addInteraction(drawLineInteraction); // Çizim etkileşimini haritaya ekle
 
         const modifyInteraction = new Modify({
-            source: map.getLayers().item(1).getSource(),
+            source: map.getLayers().item(1).getSource(), // Değiştirme etkileşimine kaynağı belirt
         });
-        map.addInteraction(modifyInteraction);
+        map.addInteraction(modifyInteraction); // Değiştirme etkileşimini haritaya ekle
 
         const snapInteraction = new Snap({
-            source: map.getLayers().item(1).getSource(),
+            source: map.getLayers().item(1).getSource(), // Yakalama etkileşimine kaynağı belirt
         });
-        map.addInteraction(snapInteraction);
+        map.addInteraction(snapInteraction); // Yakalama etkileşimini haritaya ekle
     };
 
+    // Harita bileşeninin yüklendiğinde
     useEffect(() => {
-        if (!map) return;
+        if (!map) return; // Harita yoksa çıkış yap
 
+        // Popup oluştur
         const popupElement = document.createElement('div');
         popupElement.className = 'ol-popup';
 
@@ -91,47 +116,56 @@ const LineDrawTool = ({ map }) => {
                 duration: 250,
             },
         });
-        map.addOverlay(popupOverlayRef.current);
+        map.addOverlay(popupOverlayRef.current); // Popup'ı haritaya ekle
 
+        // Haritaya tıklama olayını dinle
         const handleMapClick = (event) => {
-            const pixel = map.getEventPixel(event.originalEvent);
-            const coordinate = map.getEventCoordinate(event.originalEvent);
-            const feature = map.forEachFeatureAtPixel(pixel, (feat) => feat);
+            const pixel = map.getEventPixel(event.originalEvent); // Pikseli al
+            const coordinate = map.getEventCoordinate(event.originalEvent); // Koordinatı al
+            const feature = map.forEachFeatureAtPixel(pixel, (feat) => feat); // Pikseldeki özelliği al
 
+            // Eğer çizgi varsa
             if (feature && feature.getGeometry().getType() === 'LineString') {
-                if (!isNewLineAdded.current) {
-                    popupOverlayRef.current.setPosition(coordinate);
-
-                    const content = document.createElement('p');
+                if (!isNewLineAdded.current) { // Eğer yeni çizgi eklenmediyse
+                    const content = document.createElement('p'); // İçerik oluştur
                     content.innerHTML = `Mesafe: ${getLength(
                         feature.getGeometry(),
                         { projection: map.getView().getProjection(), radius: 6371 }
-                    ).toFixed(2)} km`;
-                    popupElement.innerHTML = '';
-                    popupElement.appendChild(content);
+                    ).toFixed(2)} km`; // Mesafeyi hesapla
+
+                    const popup = new Overlay({
+                        element: content,
+                        positioning: 'bottom-center',
+                        offset: [0, -15],
+                    });
+
+                    popup.setPosition(coordinate); // Popup pozisyonunu ayarla
+                    map.addOverlay(popup); // Popup'ı haritaya ekle
                 } else {
-                    isNewLineAdded.current = false;
+                    isNewLineAdded.current = false; // Yeni çizgi eklendiği için false olarak ayarla
                 }
             } else {
-                popupOverlayRef.current.setPosition(undefined);
+                popupOverlayRef.current.setPosition(undefined); // Popup pozisyonunu ayarla
             }
         };
 
-        map.on('click', handleMapClick);
+        map.on('click', handleMapClick); // Haritaya tıklama olayını ekle
 
         return () => {
-            map.un('click', handleMapClick);
+            map.un('click', handleMapClick); // Temizlik yap
         };
     }, [map]);
 
+    // Çizgi çizim butonu tıklandığında
     const handleLineDrawButtonClick = () => {
-        activateLineDrawTool();
+        activateLineDrawTool(); // Çizgi çizim aracını etkinleştir
     };
 
+    //Butonun ve tıklama olayının eklendiği yer
     return (
         <div>
             <button
-                onClick={handleLineDrawButtonClick}
+                onClick={handleLineDrawButtonClick} 
                 className="linebtn"
                 title="Line Tool">
                 <svg

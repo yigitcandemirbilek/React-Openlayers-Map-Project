@@ -116,10 +116,10 @@ const MapComponent = () => {
         switch (geometryType) {
             case 'Point':
                 const wgs84Coordinate = transform(clickedCoordinate, 'EPSG:3857', 'EPSG:4326');
-                popupText = `<p>Nokta Koordinatları:</p><ul><li>${decimalToDMS(wgs84Coordinate[1], false)}, ${decimalToDMS(wgs84Coordinate[0], true)}</li></ul>`;
+                popupText = `<p>Point Coordinates:</p><ul><li>${decimalToDMS(wgs84Coordinate[1], false)}, ${decimalToDMS(wgs84Coordinate[0], true)}</li></ul>`;
                 break;
             case 'Polygon':
-                popupText = `<p>Poligon Koordinatları:</p><ul>`;
+                popupText = `<p>Polygon Coordinates:</p><ul>`;
                 coordinates.forEach(coord => {
                     const wgs84Coordinate = transform(coord, 'EPSG:3857', 'EPSG:4326');
                     popupText += `<li>${decimalToDMS(wgs84Coordinate[1], false)}, ${decimalToDMS(wgs84Coordinate[0], true)}</li>`;
@@ -127,7 +127,7 @@ const MapComponent = () => {
                 popupText += `</ul>`;
                 break;
             case 'LineString':
-                popupText = `<p>Çizgi Koordinatları:</p><ul>`;
+                popupText = `<p>Line Coordinates:</p><ul>`;
                 coordinates.forEach(coord => {
                     const wgs84Coordinate = transform(coord, 'EPSG:3857', 'EPSG:4326');
                     popupText += `<li>${decimalToDMS(wgs84Coordinate[1], false)}, ${decimalToDMS(wgs84Coordinate[0], true)}</li>`;
@@ -135,7 +135,7 @@ const MapComponent = () => {
                 popupText += `</ul>`;
                 break;
             default:
-                popupText = `<p>Koordinatlar:</p><ul><li>${coordinates}</li></ul>`;
+                popupText = `<p>Coordinates:</p><ul><li>${coordinates}</li></ul>`;
         }
     
         const closer = document.createElement('a');
@@ -167,7 +167,7 @@ const MapComponent = () => {
         popupElement.appendChild(br);
     
         const saveButton = document.createElement('button');
-        saveButton.textContent = 'Kaydet';
+        saveButton.textContent = 'Save';
         saveButton.onclick = async function () {
             try {
                 let allCoordinates = [];
@@ -191,10 +191,10 @@ const MapComponent = () => {
                 await saveCoordinatesToPostgres(allCoordinates);
                 
                 // Başarılı mesajını göster
-                toast.current.show({ severity: 'success', summary: 'Başarılı', detail: 'Koordinatlar tabloya kaydedildi.' });
+                toast.current.show({ severity: 'success', summary: 'Başarılı', detail: 'The coordinates were recorded in the table.' });
             } catch (error) {
                 // Hata mesajını göster
-                toast.current.show({ severity: 'error', summary: 'Hata', detail: 'Koordinatları PostgreSQL tablosuna kaydetme başarısız oldu.' });
+                toast.current.show({ severity: 'error', summary: 'Hata', detail: 'Saving coordinates to table failed.' });
             }
         };
         
@@ -203,7 +203,7 @@ const MapComponent = () => {
         popupElement.appendChild(saveButton);
         
         const getButton = document.createElement('button');
-    getButton.textContent = 'Getir';
+    getButton.textContent = 'Bring';
     getButton.onclick = async function () {
         try {
             const coordinates = await getCoordinatesFromPostgres();
@@ -213,7 +213,7 @@ const MapComponent = () => {
             }));
             setCoordinatesFromPostgres(coordinateArray); // Postgres'ten alınan koordinatları state'e ekleyin
         } catch (error) {
-            console.error('PostgreSQL tablosundan koordinatları alırken bir hata oluştu:', error);
+            toast.current.show('An error occurred while retrieving coordinates from the PostgreSQL table.', error);
         }
     };
     
@@ -255,7 +255,7 @@ const MapComponent = () => {
 
     const takeScreenshot = () => {
         const mapElement = document.getElementById("map");
-        toast.current.show({ severity: 'success', summary: 'Başarılı', detail: 'Ekran Görüntüsü Panoya Kaydedildi.' });
+        toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Screenshot Saved to Clipboard.' });
 
         html2canvas(mapElement).then((canvas) => {
             canvas.toBlob((blob) => {
@@ -264,10 +264,9 @@ const MapComponent = () => {
                 navigator.clipboard
                     .write([new ClipboardItem({ "image/png": screenshotBlob })])
                     .then(() => {
-                        console.log("Ekran görüntüsü panoya kopyalandı.");
                     })
                     .catch((error) => {
-                        console.error("Panoya kopyalama işlemi başarısız oldu:", error);
+                        toast.current.show("Copy to clipboard failed.", error);
                     });
             });
         });
@@ -277,8 +276,8 @@ const MapComponent = () => {
         <div id="map" style={{ width: "100%", height: "1000px" }}>
              <div className="table-container">
             <DataTable value={coordinatesFromPostgres}>
-                <Column field="latitude" header="Enlem" />
-                <Column field="longitude" header="Boylam" />
+                <Column field="latitude" header="latitude" />
+                <Column field="longitude" header="longitude" />
             </DataTable>
         </div>
             <div className="toolbar">

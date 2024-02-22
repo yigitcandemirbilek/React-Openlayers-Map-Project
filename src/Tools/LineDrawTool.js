@@ -73,7 +73,7 @@ const LineDrawTool = ({ map }) => {
 
             // Yeni kod
             const content = document.createElement('div'); // İçerik oluştur
-            content.innerHTML = `<p class="distance-info">Mesafe: ${output}</p><a href="#" class="distance-info-close-button">x</a>`; // HTML içeriğini ayarla
+            content.innerHTML = `<p class="distance-info">Distance: ${output}</p><a href="#" class="distance-info-close-button">x</a>`; // HTML içeriğini ayarla
             content.querySelector('.distance-info-close-button').addEventListener('click', () => {
                 map.removeOverlay(popup); // Popup'ı kaldır
             });
@@ -128,7 +128,7 @@ const LineDrawTool = ({ map }) => {
             if (feature && feature.getGeometry().getType() === 'LineString') {
                 if (!isNewLineAdded.current) { // Eğer yeni çizgi eklenmediyse
                     const content = document.createElement('p'); // İçerik oluştur
-                    content.innerHTML = `Mesafe: ${getLength(
+                    content.innerHTML = `Distance: ${getLength(
                         feature.getGeometry(),
                         { projection: map.getView().getProjection(), radius: 6371 }
                     ).toFixed(2)} km`; // Mesafeyi hesapla

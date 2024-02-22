@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Draw, Modify, Snap } from 'ol/interaction';
+import { Polygon } from 'ol/geom';
+import { getArea } from 'ol/sphere';
+import Overlay from 'ol/Overlay';
 
 const PolygonDrawTool = ({ map, drawPolygonInteraction, drawPointInteraction }) => {
-    
+    const [area, setArea] = useState(null);
+    const [popup, setPopup] = useState(null);
+
     const activatePolygonDrawTool = () => {
         // Nokta çizme aracının etkileşimini kaldır
         if (drawPointInteraction) {
@@ -15,6 +20,37 @@ const PolygonDrawTool = ({ map, drawPolygonInteraction, drawPointInteraction }) 
         });
 
         drawPolygonInteraction.on("drawend", (event) => {
+            const geometry = event.feature.getGeometry();
+            const coordinates = geometry.getCoordinates()[0];
+            const polygon = new Polygon([coordinates]);
+            const areaInSquareMeters = getArea(polygon);
+            setArea(areaInSquareMeters);
+
+            // Popup oluştur
+            const popupContent = document.createElement('div');
+            popupContent.innerHTML = `
+                <div class="ol-popup">
+                    <div>Area: ${areaInSquareMeters.toFixed(2)} square meters</div>
+                    <a href="#" class="area-close-tag">X</a>
+                </div>`;
+            const popup = new Overlay({
+                element: popupContent,
+                positioning: 'bottom-center',
+                stopEvent: false,
+                offset: [0, -50], // Popup'ın çizginin altında açılması için ayarlanabilir
+            });
+
+            // Kapatma düğmesi işlevselliği
+            popupContent.querySelector('.area-close-tag').addEventListener('click', () => {
+                map.removeOverlay(popup);
+                setPopup(null);
+            });
+
+            map.addOverlay(popup);
+            popup.setPosition(coordinates[0]); // Çizginin başlangıç noktası yakınında popup aç
+
+            setPopup(popup);
+
             map.removeInteraction(drawPolygonInteraction);
         });
 
@@ -32,6 +68,14 @@ const PolygonDrawTool = ({ map, drawPolygonInteraction, drawPointInteraction }) 
     };
 
     const handlePolygonDrawButtonClick = () => {
+        setArea(null); // Reset area when starting to draw a new polygon
+
+        // Eğer önceki bir popup varsa kaldır
+        if (popup) {
+            map.removeOverlay(popup);
+            setPopup(null);
+        }
+
         activatePolygonDrawTool();
     };
 

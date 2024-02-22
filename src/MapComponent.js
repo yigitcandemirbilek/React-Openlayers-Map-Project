@@ -20,9 +20,6 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 
-        
-
-
 const MapComponent = () => {
     const turkeyCenter = fromLonLat([35.1683, 37.1616]);
     const [map, setMap] = useState(null);
@@ -206,17 +203,21 @@ const MapComponent = () => {
         popupElement.appendChild(saveButton);
         
         const getButton = document.createElement('button');
-        getButton.textContent = 'Getir';
-        getButton.onclick = async function () {
-            try {
-                const coordinates = await getCoordinatesFromPostgres();
-                setCoordinatesFromPostgres(coordinates); // Postgres'ten alınan koordinatları state'e ekleyin
-            } catch (error) {
-                console.error('PostgreSQL tablosundan koordinatları alırken bir hata oluştu:', error);
-            }
-        };
-        
-        popupElement.appendChild(getButton);
+    getButton.textContent = 'Getir';
+    getButton.onclick = async function () {
+        try {
+            const coordinates = await getCoordinatesFromPostgres();
+            const coordinateArray = coordinates.map(coordinate => ({
+                latitude: coordinate[0],
+                longitude: coordinate[1]
+            }));
+            setCoordinatesFromPostgres(coordinateArray); // Postgres'ten alınan koordinatları state'e ekleyin
+        } catch (error) {
+            console.error('PostgreSQL tablosundan koordinatları alırken bir hata oluştu:', error);
+        }
+    };
+    
+    popupElement.appendChild(getButton);
 
         const popupOverlay = new Overlay({
             element: popupElement,

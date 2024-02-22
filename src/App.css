@@ -286,9 +286,10 @@
 .distance-info-close-button {
     color: white;
     position: absolute;
-    top: -3px;
+    top: 1px;
     right: -3px;
-    padding: 5px 10px; 
+    padding: 5px 10px;
+    text-decoration: none;
 }
 
 /* Koordinat tablosunun cssleri */
@@ -299,10 +300,10 @@
     right: 20px;
     transform: translateY(-50%);
     z-index: 9999;
-    background-color: var(--primary-btn-color); /* Arka plan rengi */
+    background-color: var(--primary-btn-color);
     padding: 20px; /* İç boşluk */
     border-radius: 5px; /* Kenar yuvarlatma */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Gölge */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .table-container table {
@@ -318,10 +319,10 @@
 }
 
 .table-container th {
-    background-color: #f2f2f2; /* Başlık arka plan rengi */
+    background-color: #f2f2f2; 
 }
 
-/* İstediğiniz diğer stillendirme kuralları */
+
 
 
 

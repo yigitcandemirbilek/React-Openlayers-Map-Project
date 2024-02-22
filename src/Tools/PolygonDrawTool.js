@@ -4,30 +4,34 @@ import { Polygon } from 'ol/geom';
 import { getArea } from 'ol/sphere';
 import Overlay from 'ol/Overlay';
 
+// PolygonDrawTool bileşeni, bir haritada çokgen çizme işlevselliğini sağlar
 const PolygonDrawTool = ({ map, drawPolygonInteraction, drawPointInteraction }) => {
-    const [area, setArea] = useState(null);
-    const [popup, setPopup] = useState(null);
+    const [area, setArea] = useState(null); // Alan bilgisini saklamak için state kullan
+    const [popup, setPopup] = useState(null); // Popup bileşenini saklamak için state kullan
 
+    // Çokgen çizme aracını etkinleştir
     const activatePolygonDrawTool = () => {
         // Nokta çizme aracının etkileşimini kaldır
         if (drawPointInteraction) {
             map.removeInteraction(drawPointInteraction);
         }
 
+        // Çizim etkileşimini oluştur ve haritaya ekle
         drawPolygonInteraction = new Draw({
-            source: map.getLayers().item(1).getSource(),
-            type: "Polygon",
+            source: map.getLayers().item(1).getSource(), // Çizimlerin kaydedileceği kaynağı belirt
+            type: "Polygon", // Çokgen çizimi belirt
         });
 
+        // Çizim tamamlandığında yapılacak işlemler
         drawPolygonInteraction.on("drawend", (event) => {
-            const geometry = event.feature.getGeometry();
-            const coordinates = geometry.getCoordinates()[0];
-            const polygon = new Polygon([coordinates]);
-            const areaInSquareMeters = getArea(polygon);
-            setArea(areaInSquareMeters);
+            const geometry = event.feature.getGeometry(); // Çizimin geometrisini al
+            const coordinates = geometry.getCoordinates()[0]; // Koordinatları al
+            const polygon = new Polygon([coordinates]); // Bir çokgen oluştur
+            const areaInSquareMeters = getArea(polygon); // Alanı hesapla
+            setArea(areaInSquareMeters); // Alanı state'e kaydet
 
             // Popup oluştur
-            const popupContent = document.createElement('div');
+            const popupContent = document.createElement('div'); // Popup içeriğini oluştur
             popupContent.innerHTML = `
                 <div class="ol-popup">
                     <div>Area: ${areaInSquareMeters.toFixed(2)} square meters</div>
@@ -42,33 +46,36 @@ const PolygonDrawTool = ({ map, drawPolygonInteraction, drawPointInteraction }) 
 
             // Kapatma düğmesi işlevselliği
             popupContent.querySelector('.area-close-tag').addEventListener('click', () => {
-                map.removeOverlay(popup);
-                setPopup(null);
+                map.removeOverlay(popup); // Popup'ı haritadan kaldır
+                setPopup(null); // Popup state'ini sıfırla
             });
 
-            map.addOverlay(popup);
-            popup.setPosition(coordinates[0]); // Çizginin başlangıç noktası yakınında popup aç
+            map.addOverlay(popup); // Popup'ı haritaya ekle
+            popup.setPosition(coordinates[0]); // Popup'ı çizginin başlangıç noktası yakınında aç
 
-            setPopup(popup);
+            setPopup(popup); // Popup bileşenini state'e kaydet
 
-            map.removeInteraction(drawPolygonInteraction);
+            map.removeInteraction(drawPolygonInteraction); // Çokgen çizme etkileşimini kaldır
         });
 
-        map.addInteraction(drawPolygonInteraction);
+        map.addInteraction(drawPolygonInteraction); // Çokgen çizme etkileşimini haritaya ekle
 
+        // Çizimi düzenleme etkileşimini oluştur ve haritaya ekle
         const modifyInteraction = new Modify({
-            source: map.getLayers().item(1).getSource(),
+            source: map.getLayers().item(1).getSource(), // Düzenlenecek kaynağı belirt
         });
         map.addInteraction(modifyInteraction);
 
+        // Yakalama etkileşimini oluştur ve haritaya ekle
         const snapInteraction = new Snap({
-            source: map.getLayers().item(1).getSource(),
+            source: map.getLayers().item(1).getSource(), // Yakalanacak kaynağı belirt
         });
         map.addInteraction(snapInteraction);
     };
 
+    // Çokgen çizme düğmesine tıklandığında tetiklenecek fonksiyon
     const handlePolygonDrawButtonClick = () => {
-        setArea(null); // Reset area when starting to draw a new polygon
+        setArea(null); // Yeni bir çokgen çizildiğinde alanı sıfırla
 
         // Eğer önceki bir popup varsa kaldır
         if (popup) {
@@ -76,11 +83,13 @@ const PolygonDrawTool = ({ map, drawPolygonInteraction, drawPointInteraction }) 
             setPopup(null);
         }
 
-        activatePolygonDrawTool();
+        activatePolygonDrawTool(); // Çokgen çizme aracını etkinleştir
     };
 
+    // Butonun ve tıklama işleminin eklendiği yer
     return (
         <div>
+            {/* Çokgen çizme düğmesi */}
             <button className="polygonbtn"
                 title="Polygon Tool"
                 onClick={handlePolygonDrawButtonClick}>

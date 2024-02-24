@@ -25,6 +25,10 @@ const MapComponent = () => {
     const [map, setMap] = useState(null);
     const toast = useRef(null);
     const [coordinatesFromPostgres, setCoordinatesFromPostgres] = useState([]);
+    const [pointCoordinates, setPointCoordinates] = useState([]);
+    const [lineCoordinates, setLineCoordinates] = useState([]);
+    const [polygonCoordinates, setPolygonCoordinates] = useState([]);
+
 
 
     useEffect(() => {
@@ -79,6 +83,15 @@ const MapComponent = () => {
             });
         }
     }, [map]);
+
+    useEffect(() => {
+        if (coordinatesFromPostgres.length > 0) {
+            // Eğer Postgres'ten alınan koordinatlar varsa, bunları haritaya ekleyin
+            setPointCoordinates(coordinatesFromPostgres.filter(coord => coord.geometryType === 'Point').map(coord => coord.coordinates));
+            setLineCoordinates(coordinatesFromPostgres.filter(coord => coord.geometryType === 'LineString').map(coord => coord.coordinates));
+            setPolygonCoordinates(coordinatesFromPostgres.filter(coord => coord.geometryType === 'Polygon').map(coord => coord.coordinates));
+        }
+    }, [coordinatesFromPostgres]);
     
 
     const decimalToDMS = (coordinate, isLongitude) => {
@@ -169,34 +182,52 @@ const MapComponent = () => {
         const saveButton = document.createElement('button');
         saveButton.textContent = 'Save';
         saveButton.onclick = async function () {
+
             try {
-                let allCoordinates = [];
+    
+                let pointCoordinates = [];
+    
+                let lineCoordinates = [];
+                let polygonCoordinates = [];
+        
+        // Haritadaki tüm vektör katmanlarını al
+        map.getLayers().forEach(layer => {
+            if (layer instanceof VectorLayer) {
+                const source = layer.getSource();
+                const features = source.getFeatures();
                 
-                // Haritadaki tüm vektör katmanlarını al
-                map.getLayers().forEach(layer => {
-                    if (layer instanceof VectorLayer) {
-                        const source = layer.getSource();
-                        const features = source.getFeatures();
-                        
-                        // Her bir özellik için geometri türünü kontrol et
-                        features.forEach(feature => {
-                            const geometry = feature.getGeometry();
-                            const coordinates = getFeatureCoordinates(geometry);
-                            allCoordinates = allCoordinates.concat(coordinates);
-                        });
+                // Her bir özellik için geometri türünü kontrol et
+                features.forEach(feature => {
+                    const geometry = feature.getGeometry();
+                    const coordinates = getFeatureCoordinates(geometry);
+                    switch (geometry.getType()) {
+                        case 'Point':
+                            pointCoordinates.push(coordinates);
+                            break;
+                        case 'LineString':
+                            lineCoordinates.push(coordinates);
+                            break;
+                        case 'Polygon':
+                            polygonCoordinates.push(coordinates);
+                            break;
+                        default:
+                            break;
                     }
                 });
-                
-                // Tüm koordinatları PostgreSQL'e kaydet
-                await saveCoordinatesToPostgres(allCoordinates);
-                
-                // Başarılı mesajını göster
-                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'The coordinates were recorded in the table.' });
-            } catch (error) {
-                // Hata mesajını göster
-                toast.current.show({ severity: 'error', summary: 'Error', detail: 'Saving coordinates to table failed.' });
             }
-        };
+        });
+        
+        // Tüm koordinatları PostgreSQL'e kaydet
+        await saveCoordinatesToPostgres(pointCoordinates, lineCoordinates, polygonCoordinates);
+        
+        // Başarılı mesajını göster
+        toast.current.show({ severity: 'success', summary: 'Successful', detail: 'The coordinates were recorded in the table.' });
+    } catch (error) {
+        // Hata mesajını göster
+        toast.current.show({ severity: 'error', summary: 'Error', detail: 'Saving coordinates to table failed.' });
+    }
+};
+
         
         
     
@@ -285,9 +316,15 @@ const MapComponent = () => {
                     <PointDrawTool
                         map={map}
                         className="pointbtn"
+                        onDrawEnd={coordinates => setPointCoordinates([...pointCoordinates, coordinates])}
                     />
-                    <PolygonDrawTool map={map} className="polygonbtn" />
-                    <LineDrawTool map={map} className="linebtn" />
+                    <PolygonDrawTool map={map} className="polygonbtn"
+                        onDrawEnd={coordinates => setPointCoordinates([...pointCoordinates, coordinates])}
+                    />
+                    <LineDrawTool map={map} className="linebtn"
+                    onDrawEnd={coordinates => setPointCoordinates([...pointCoordinates, coordinates])}
+
+                    />
                     <button
                         onClick={handleClearButtonClick}
                         className="clearbtn"

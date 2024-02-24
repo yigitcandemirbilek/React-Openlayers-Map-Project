@@ -191,10 +191,10 @@ const MapComponent = () => {
                 await saveCoordinatesToPostgres(allCoordinates);
                 
                 // Başarılı mesajını göster
-                toast.current.show({ severity: 'success', summary: 'Başarılı', detail: 'The coordinates were recorded in the table.' });
+                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'The coordinates were recorded in the table.' });
             } catch (error) {
                 // Hata mesajını göster
-                toast.current.show({ severity: 'error', summary: 'Hata', detail: 'Saving coordinates to table failed.' });
+                toast.current.show({ severity: 'error', summary: 'Error', detail: 'Saving coordinates to table failed.' });
             }
         };
         

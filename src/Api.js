@@ -5,26 +5,25 @@ import Polygon from 'ol/geom/Polygon';
 import LineString from 'ol/geom/LineString';
 
 // PostgreSQL tablosuna koordinatları kaydetmek için bir işlev
-export const saveCoordinatesToPostgres = async (coordinatesArray) => {
+export const saveCoordinatesToPostgres = async (pointCoordinates, lineCoordinates, polygonCoordinates) => {
   try {
-    // Axios ile koordinatları PostgreSQL'e tek tek kaydet
-    const responses = await Promise.all(coordinatesArray.map(async (coordinates) => {
-      let wktGeometry;
-      // Koordinat türüne göre WKT geometrisini oluştur
-      if (coordinates.length === 2) {
-        // Nokta
-        wktGeometry = new WKT().writeGeometry(new Point(coordinates));
-      } else if (coordinates[0].length === 2) {
-        // Çizgi
-        wktGeometry = new WKT().writeGeometry(new LineString(coordinates));
-      } else {
-        // Poligon
-        wktGeometry = new WKT().writeGeometry(new Polygon([coordinates]));
-      }
-      
-      // Axios ile POST isteği yaparak koordinatları PostgreSQL'e kaydet
-      return axios.post('https://localhost:7196/api/SpatialData', { wkt: wktGeometry });
-    }));
+    const wktFormat = new WKT();
+
+    // Nokta koordinatlarını WKT formatına dönüştür
+    const pointWKTGeometry = pointCoordinates.map(coord => new Point(coord)).map(point => wktFormat.writeGeometry(point));
+    
+    // Çizgi koordinatlarını WKT formatına dönüştür
+    const lineWKTGeometry = lineCoordinates.map(coords => new LineString(coords)).map(line => wktFormat.writeGeometry(line));
+    
+    // Poligon koordinatlarını WKT formatına dönüştür
+    const polygonWKTGeometry = polygonCoordinates.map(coords => new Polygon([coords])).map(polygon => wktFormat.writeGeometry(polygon));
+
+    // Axios ile POST isteği yaparak koordinatları PostgreSQL'e kaydet
+    const responses = await Promise.all([
+      ...pointWKTGeometry.map(wkt => axios.post('https://localhost:7044/api/SpatialData', { wkt })),
+      ...lineWKTGeometry.map(wkt => axios.post('https://localhost:7044/api/SpatialData', { wkt })),
+      ...polygonWKTGeometry.map(wkt => axios.post('https://localhost:7044/api/SpatialData', { wkt }))
+    ]);
 
     // İşlem başarılı olduysa geri dönen veriyi konsola yazdır
     responses.forEach(response => console.log(response.data));
@@ -40,7 +39,7 @@ export const saveCoordinatesToPostgres = async (coordinatesArray) => {
 export const getCoordinatesFromPostgres = async () => {
   try {
     // Axios ile GET isteği yaparak PostgreSQL'den koordinatları al
-    const response = await axios.get('https://localhost:7196/api/SpatialData');
+    const response = await axios.get('https://localhost:7044/api/SpatialData');
 
     // İşlem başarılı olduysa geri dönen veriyi konsola yazdır
     console.log(response.data);

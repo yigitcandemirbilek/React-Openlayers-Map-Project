@@ -309,16 +309,21 @@
 
 .table-container {
     position: absolute;
-    top: 30%;
-    right: 20px;
-    transform: translateY(-50%);
+    top: 150px;
+    right: 0;
+    bottom: 0;
+    left: 0;
     z-index: 9999;
     background-color: var(--primary-btn-color);
     padding: 20px; /* İç boşluk */
     border-radius: 5px; /* Kenar yuvarlatma */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     overflow-y: auto;
-    max-height: 500px;
+}
+
+.table-container h2 {
+    color: white;
+    margin-bottom: 1rem;
 }
 
 .table-container table {
@@ -337,20 +342,45 @@
     background-color: #f2f2f2; 
 }
 
-.p-button{
+.p-button {
     background-color: var(--primary-btn-color);
 }
 
-.sidebar-btn{
+.sidebar-btn {
     position: absolute;
-    right: 0;
+    top: 1rem;
+    right: 1rem;
     z-index: 999;
-    
 }
 
-.p-button-icon{
+.p-button-text {
+    background-color: white;
+    margin: 1rem;
+    color: var(--primary-btn-color);
+}
+
+.p-button-text:hover {
+    background-color: silver;
+}
+
+.table-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.sidebar-left {
+    background-color: var(--primary-btn-color);
+}
+
+h2 {
     color: white;
 }
+
+
+
+
+
+
 
 
 

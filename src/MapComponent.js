@@ -285,14 +285,35 @@ const MapComponent = () => {
         });
     };
 
+    const handleBringButtonClick = async () => {
+        try {
+            const coordinates = await getCoordinatesFromPostgres();
+            const coordinateArray = coordinates.map(coordinate => ({
+                latitude: coordinate[0],
+                longitude: coordinate[1]
+            }));
+            setCoordinatesFromPostgres(coordinateArray);
+        } catch (error) {
+            toast.current.show('An error occurred while retrieving coordinates from the PostgreSQL table.', error);
+        }
+    };
+    const handleClearTableClick = () => {
+        setCoordinatesFromPostgres([]);
+    }
+
     return (
         <div id="map" style={{ width: "100%", height: "1000px" }}>
             <Sidebar visible={visibleRight} position='right' onHide={() => setVisibleRight(false)} className="sidebar-left">
+                <h2>DataBase Table</h2>
                 <div className="table-container">
                     <DataTable value={coordinatesFromPostgres}>
                         <Column field="latitude" header="latitude" />
                         <Column field="longitude" header="longitude" />
                     </DataTable>
+                    <div className="table-buttons">
+                    <Button label="Bring" onClick={handleBringButtonClick} className="p-button-text" />
+                    <Button label="Clear" onClick={handleClearTableClick} className="p-button-text" />
+                    </div>
                 </div>
             </Sidebar>
             <div className="toolbar">

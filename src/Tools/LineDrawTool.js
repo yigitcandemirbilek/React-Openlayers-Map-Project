@@ -54,43 +54,52 @@ const LineDrawTool = ({ map }) => {
 
         // Çizim tamamlandığında
         // Çizim tamamlandığında
-drawLineInteraction.on('drawend', (event) => {
-    isNewLineAdded.current = true; // Yeni çizgi eklendi
-    map.removeOverlay(measureTooltipRef.current); // Ölçüm işaretçisini kaldır
-    map.removeInteraction(drawLineInteraction); // Çizim etkileşimini kaldır
-
-    const geometry = event.feature.getGeometry(); // Geometriyi al
-    const length = getLength(geometry, {
-        projection: map.getView().getProjection(), // Projeksiyonu al
-        radius: 6371, // Yarıçap
-    });
-
-    const output = `${length.toFixed(2)} km`; // Mesafeyi hesapla
-
-    const feature = new Feature({
-        geometry: new LineString(geometry.getCoordinates()), // Geometriyi ayarla
-    });
-    map.getLayers().item(1).getSource().addFeature(feature); // Feature'ı harita katmanına ekle
-
-    // Yeni kod
-    const content = document.createElement('div'); // İçerik oluştur
-    content.innerHTML = `<p class="distance-info">Distance: ${output}</p><a href="#" class="distance-info-close-button">x</a>`; // HTML içeriğini ayarla
-    content.querySelector('.distance-info-close-button').addEventListener('click', () => {
-        map.removeOverlay(popup); // Popup'ı kaldır
-    });
-
-    const popup = new Overlay({
-        element: content,
-        positioning: 'bottom-center',
-        offset: [0, -15],
-    });
-
-    popup.setPosition(geometry.getLastCoordinate()); // Popup pozisyonunu ayarla
-    map.addOverlay(popup); // Popup'ı haritaya ekle
-
-    // Çizgi geometrisini Overlay olarak ayarla
-    event.feature.set('isOverlay', true);
-});
+        drawLineInteraction.on('drawstart', (event) => {
+            isNewLineAdded.current = false; // Yeni çizgi eklenmedi
+            map.removeOverlay(measureTooltipRef.current); // Önceki ölçüm işaretçisini kaldır
+        
+            // Ölçüm işaretçisi oluştur
+            const tooltipElement = document.createElement('div');
+            tooltipElement.className = 'ol-tooltip ol-tooltip-measure';
+            measureTooltipRef.current = new Overlay({
+                element: tooltipElement,
+                offset: [0, -15],
+                positioning: 'bottom-center',
+            });
+            map.addOverlay(measureTooltipRef.current);
+        
+            // Çizim değiştiğinde
+            event.feature.on('change', (evt) => {
+                if (!isNewLineAdded.current) {
+                    const geom = evt.target.getGeometry(); // Geometriyi al
+                    const length = getLength(geom, {
+                        projection: map.getView().getProjection(), // Projeksiyonu al
+                        radius: 6371, // Yarıçap
+                    });
+                    const output = `${length.toFixed(2)} km`; // Mesafeyi hesapla
+                    const tooltipCoord = geom.getLastCoordinate(); // İşaretçi koordinatını al
+                    tooltipElement.innerHTML = `<span>${output}</span>`; // HTML içeriğini ayarla
+                    measureTooltipRef.current.setPosition(tooltipCoord); // İşaretçi pozisyonunu ayarla
+                }
+            });
+        });
+        
+        drawLineInteraction.on('drawend', (event) => {
+            isNewLineAdded.current = true; // Yeni çizgi eklendi
+            map.removeOverlay(measureTooltipRef.current); // Ölçüm işaretçisini kaldır
+            map.removeInteraction(drawLineInteraction); // Çizim etkileşimini kaldır
+        
+            const geometry = event.feature.getGeometry(); // Geometriyi al
+        
+            const feature = new Feature({
+                geometry: new LineString(geometry.getCoordinates()), // Geometriyi ayarla
+            });
+            map.getLayers().item(1).getSource().addFeature(feature); // Feature'ı harita katmanına ekle
+        
+            // Çizgi geometrisini Overlay olarak ayarla
+            event.feature.set('isOverlay', true);
+        });
+        
 
 
         map.addInteraction(drawLineInteraction); // Çizim etkileşimini haritaya ekle

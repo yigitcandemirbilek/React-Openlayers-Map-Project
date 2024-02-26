@@ -18,6 +18,8 @@ import { Toast } from 'primereact/toast';
 import { saveCoordinatesToPostgres, getCoordinatesFromPostgres } from './Api'; 
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { Sidebar } from 'primereact/sidebar';
+import { Button } from 'primereact/button';
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 
 const MapComponent = () => {
@@ -28,6 +30,9 @@ const MapComponent = () => {
     const [pointCoordinates, setPointCoordinates] = useState([]);
     const [lineCoordinates, setLineCoordinates] = useState([]);
     const [polygonCoordinates, setPolygonCoordinates] = useState([]);
+    const popup = useRef(null);
+    const popupOverlay = useRef(null);
+    const [visibleRight, setVisibleRight] = useState(false);
 
 
 
@@ -70,14 +75,12 @@ const MapComponent = () => {
         if (map) {
             map.on('singleclick', function (evt) {
                 const clickedCoordinate = evt.coordinate;
-                
                 const features = map.getFeaturesAtPixel(evt.pixel);
-                
-                if (features && features.length > 0) {
+                if (features && features.length === 1) {
                     const feature = features[0];
                     const geometry = feature.getGeometry();
-                    const geometryType = geometry.getType();
                     const coordinates = getFeatureCoordinates(geometry);
+                    const geometryType = geometry.getType();
                     showPopup(clickedCoordinate, coordinates, geometryType);
                 }
             });
@@ -86,13 +89,11 @@ const MapComponent = () => {
 
     useEffect(() => {
         if (coordinatesFromPostgres.length > 0) {
-            // Eğer Postgres'ten alınan koordinatlar varsa, bunları haritaya ekleyin
             setPointCoordinates(coordinatesFromPostgres.filter(coord => coord.geometryType === 'Point').map(coord => coord.coordinates));
             setLineCoordinates(coordinatesFromPostgres.filter(coord => coord.geometryType === 'LineString').map(coord => coord.coordinates));
             setPolygonCoordinates(coordinatesFromPostgres.filter(coord => coord.geometryType === 'Polygon').map(coord => coord.coordinates));
         }
     }, [coordinatesFromPostgres]);
-    
 
     const decimalToDMS = (coordinate, isLongitude) => {
         const direction = isLongitude ? (coordinate >= 0 ? 'E' : 'W') : (coordinate >= 0 ? 'N' : 'S');
@@ -102,7 +103,7 @@ const MapComponent = () => {
         const seconds = ((coordinate - degrees - (minutes / 60)) * 3600).toFixed(1);
         return `${degrees}° ${minutes}' ${Math.abs(seconds)}" ${direction}`;
     };
-    
+
     const getFeatureCoordinates = (geometry) => {
         let coordinates = [];
         geometry.getCoordinates().forEach(coord => {
@@ -118,10 +119,19 @@ const MapComponent = () => {
     };
 
     const showPopup = (clickedCoordinate, coordinates, geometryType) => {
-        const existingPopups = document.querySelectorAll('.ol-popup');
-        existingPopups.forEach(popup => popup.remove());
-    
-        const popupElement = document.createElement('div');
+        if (!popup.current) {
+            popup.current = new Overlay({
+                element: document.createElement('div'),
+                autoPan: {
+                    animation: {
+                        duration: 250,
+                    },
+                },
+            });
+            map.addOverlay(popup.current);
+        }
+
+        const popupElement = popup.current.getElement();
         popupElement.className = 'ol-popup';
         const popupContent = document.createElement('div');
     
@@ -163,7 +173,6 @@ const MapComponent = () => {
     
         popupContent.innerHTML = popupText;
         popupElement.appendChild(popupContent);
-        
     
         const googleMapsLink = document.createElement('a');
         googleMapsLink.href = '#';
@@ -182,90 +191,63 @@ const MapComponent = () => {
         const saveButton = document.createElement('button');
         saveButton.textContent = 'Save';
         saveButton.onclick = async function () {
-
             try {
-    
                 let pointCoordinates = [];
-    
                 let lineCoordinates = [];
                 let polygonCoordinates = [];
         
-        // Haritadaki tüm vektör katmanlarını al
-        map.getLayers().forEach(layer => {
-            if (layer instanceof VectorLayer) {
-                const source = layer.getSource();
-                const features = source.getFeatures();
-                
-                // Her bir özellik için geometri türünü kontrol et
-                features.forEach(feature => {
-                    const geometry = feature.getGeometry();
-                    const coordinates = getFeatureCoordinates(geometry);
-                    switch (geometry.getType()) {
-                        case 'Point':
-                            pointCoordinates.push(coordinates);
-                            break;
-                        case 'LineString':
-                            lineCoordinates.push(coordinates);
-                            break;
-                        case 'Polygon':
-                            polygonCoordinates.push(coordinates);
-                            break;
-                        default:
-                            break;
+                map.getLayers().forEach(layer => {
+                    if (layer instanceof VectorLayer) {
+                        const source = layer.getSource();
+                        const features = source.getFeatures();
+                        features.forEach(feature => {
+                            const geometry = feature.getGeometry();
+                            const coordinates = getFeatureCoordinates(geometry);
+                            switch (geometry.getType()) {
+                                case 'Point':
+                                    pointCoordinates.push(coordinates);
+                                    break;
+                                case 'LineString':
+                                    lineCoordinates.push(coordinates);
+                                    break;
+                                case 'Polygon':
+                                    polygonCoordinates.push(coordinates);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        });
                     }
                 });
+        
+                await saveCoordinatesToPostgres(pointCoordinates, lineCoordinates, polygonCoordinates);
+                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'The coordinates were recorded in the table.' });
+            } catch (error) {
+                toast.current.show({ severity: 'error', summary: 'Error', detail: 'Saving coordinates to table failed.' });
             }
-        });
-        
-        // Tüm koordinatları PostgreSQL'e kaydet
-        await saveCoordinatesToPostgres(pointCoordinates, lineCoordinates, polygonCoordinates);
-        
-        // Başarılı mesajını göster
-        toast.current.show({ severity: 'success', summary: 'Successful', detail: 'The coordinates were recorded in the table.' });
-    } catch (error) {
-        // Hata mesajını göster
-        toast.current.show({ severity: 'error', summary: 'Error', detail: 'Saving coordinates to table failed.' });
-    }
-};
+        };
 
-        
-        
-    
         popupElement.appendChild(saveButton);
-        
+
         const getButton = document.createElement('button');
-    getButton.textContent = 'Bring';
-    getButton.onclick = async function () {
-        try {
-            const coordinates = await getCoordinatesFromPostgres();
-            const coordinateArray = coordinates.map(coordinate => ({
-                latitude: coordinate[0],
-                longitude: coordinate[1]
-            }));
-            setCoordinatesFromPostgres(coordinateArray); // Postgres'ten alınan koordinatları state'e ekleyin
-        } catch (error) {
-            toast.current.show('An error occurred while retrieving coordinates from the PostgreSQL table.', error);
-        }
-    };
-    
-    popupElement.appendChild(getButton);
+        getButton.textContent = 'Bring';
+        getButton.onclick = async function () {
+            try {
+                const coordinates = await getCoordinatesFromPostgres();
+                const coordinateArray = coordinates.map(coordinate => ({
+                    latitude: coordinate[0],
+                    longitude: coordinate[1]
+                }));
+                setCoordinatesFromPostgres(coordinateArray);
+            } catch (error) {
+                toast.current.show('An error occurred while retrieving coordinates from the PostgreSQL table.', error);
+            }
+        };
 
-        const popupOverlay = new Overlay({
-            element: popupElement,
-            autoPan: {
-                animation: {
-                    duration: 250,
-                },
-            },
-        });
-    
-        map.addOverlay(popupOverlay);
-        popupOverlay.setPosition(clickedCoordinate);
-    };
-    
+        popupElement.appendChild(getButton);
 
-    
-    
+        popup.current.setPosition(clickedCoordinate);
+    };
 
     const openGoogleMaps = (latitude, longitude) => {
         const coordinates = `${latitude},${longitude}`;
@@ -294,8 +276,7 @@ const MapComponent = () => {
 
                 navigator.clipboard
                     .write([new ClipboardItem({ "image/png": screenshotBlob })])
-                    .then(() => {
-                    })
+                    .then(() => {})
                     .catch((error) => {
                         toast.current.show("Copy to clipboard failed.", error);
                     });
@@ -305,25 +286,39 @@ const MapComponent = () => {
 
     return (
         <div id="map" style={{ width: "100%", height: "1000px" }}>
-             <div className="table-container">
-            <DataTable value={coordinatesFromPostgres}>
-                <Column field="latitude" header="latitude" />
-                <Column field="longitude" header="longitude" />
-            </DataTable>
-        </div>
+            <Sidebar visible={visibleRight} position='right' onHide={() => setVisibleRight(false)} className="sidebar-left">
+                <div className="table-container">
+                    <DataTable value={coordinatesFromPostgres}>
+                        <Column field="latitude" header="latitude" />
+                        <Column field="longitude" header="longitude" />
+                    </DataTable>
+                </div>
+            </Sidebar>
             <div className="toolbar">
                 <div className="toolbar-content">
                     <PointDrawTool
                         map={map}
                         className="pointbtn"
-                        onDrawEnd={coordinates => setPointCoordinates([...pointCoordinates, coordinates])}
+                        onDrawEnd={coordinates => {
+                            setPointCoordinates([...pointCoordinates, coordinates]);
+                            showPopup(coordinates, coordinates, 'Point');
+                        }}
                     />
-                    <PolygonDrawTool map={map} className="polygonbtn"
-                        onDrawEnd={coordinates => setPointCoordinates([...pointCoordinates, coordinates])}
+                    <PolygonDrawTool
+                        map={map}
+                        className="polygonbtn"
+                        onDrawEnd={coordinates => {
+                            setPolygonCoordinates([...polygonCoordinates, coordinates]);
+                            showPopup(coordinates[0], coordinates, 'Polygon');
+                        }}
                     />
-                    <LineDrawTool map={map} className="linebtn"
-                    onDrawEnd={coordinates => setPointCoordinates([...pointCoordinates, coordinates])}
-
+                    <LineDrawTool
+                        map={map}
+                        className="linebtn"
+                        onDrawEnd={coordinates => {
+                            setLineCoordinates([...lineCoordinates, coordinates]);
+                            showPopup(coordinates[0], coordinates, 'LineString');
+                        }}
                     />
                     <button
                         onClick={handleClearButtonClick}
@@ -384,6 +379,9 @@ const MapComponent = () => {
                         <CameraOutlined />
                     </button>
                 </div>
+                <div className='sidebar-btn'>
+                    <Button icon="pi pi-arrow-left" onClick={() => setVisibleRight(true)} />
+                    </div>
                 <Toast className='screenshot-toast' ref={toast}></Toast>
             </div>
         </div>

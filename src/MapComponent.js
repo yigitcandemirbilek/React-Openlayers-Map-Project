@@ -21,6 +21,7 @@ import { Column } from 'primereact/column';
 import { Sidebar } from 'primereact/sidebar';
 import { Button } from 'primereact/button';
 import "primereact/resources/themes/lara-light-cyan/theme.css";
+import 'primeicons/primeicons.css';
 
 const MapComponent = () => {
     const turkeyCenter = fromLonLat([35.1683, 37.1616]);

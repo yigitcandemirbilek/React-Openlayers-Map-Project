@@ -44,9 +44,16 @@ export const getCoordinatesFromPostgres = async () => {
     // İşlem başarılı olduysa geri dönen veriyi konsola yazdır
     console.log(response.data);
     
-    return response.data; // İsteğin döndürdüğü veriyi geri döndür
+    // Veriyi dönüştürerek her bir öğenin içinde latitude ve longitude alanları olan bir nesne dizisi oluştur
+    const formattedData = response.data.map(item => ({
+      latitude: item.latitude, // Varsa uygun alanları al, yoksa undefined olacak
+      longitude: item.longitude // Varsa uygun alanları al, yoksa undefined olacak
+    }));
+    
+    return formattedData; // İsteğin döndürdüğü veriyi geri döndür
   } catch (error) {
     console.error('Error getting coordinates from PostgreSQL:', error);
     throw error;
   }
 };
+

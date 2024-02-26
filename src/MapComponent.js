@@ -22,6 +22,10 @@ import { Sidebar } from 'primereact/sidebar';
 import { Button } from 'primereact/button';
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 import 'primeicons/primeicons.css';
+import { ColorType } from 'ol/expr/expression';
+import { Style, Circle, Fill, Stroke } from 'ol/style';
+
+
 
 const MapComponent = () => {
     const turkeyCenter = fromLonLat([35.1683, 37.1616]);
@@ -32,7 +36,6 @@ const MapComponent = () => {
     const [lineCoordinates, setLineCoordinates] = useState([]);
     const [polygonCoordinates, setPolygonCoordinates] = useState([]);
     const popup = useRef(null);
-    const popupOverlay = useRef(null);
     const [visibleRight, setVisibleRight] = useState(false);
     const [activeInteraction, setActiveInteraction] = useState(false);
 
@@ -120,7 +123,15 @@ const MapComponent = () => {
                         const coordinates = getFeatureCoordinates(selectedGeometry);
                         const geometryType = selectedGeometry.getType();
                         // Seçilen çizimi vurgula, örneğin rengini değiştir
-                        clickedFeature.setStyle(/* yeni stil */);
+                        clickedFeature.setStyle(new Style({
+                            stroke: new Stroke({
+                                color: 'blue', // Çizgi rengini burada değiştirebilirsiniz
+                                width: 2
+                            }),
+                            fill: new Fill({
+                                color: 'rgba(255, 255, 255, 0.2)' // Alan rengini burada değiştirebilirsiniz
+                            })
+                        }));
                         // Popup'ı göster
                         showPopup(clickedCoordinate, coordinates, geometryType);
                     } else {
@@ -129,7 +140,15 @@ const MapComponent = () => {
                         const coordinates = getFeatureCoordinates(selectedGeometry);
                         const geometryType = selectedGeometry.getType();
                         // Seçilen çizimi vurgula, örneğin rengini değiştir
-                        clickedFeature.setStyle(/* yeni stil */);
+                        clickedFeature.setStyle(new Style({
+                            stroke: new Stroke({
+                                color: 'blue', // Çizgi rengini burada değiştirebilirsiniz
+                                width: 2
+                            }),
+                            fill: new Fill({
+                                color: 'rgba(255, 255, 255, 0.2)' // Alan rengini burada değiştirebilirsiniz
+                            })
+                        }));
                         // Popup'ı gösterme veya başka bir işlem yapma
                         // ...
                     }
@@ -147,12 +166,6 @@ const MapComponent = () => {
         }
     }, [map, activeInteraction]);
     
-    
-    
-    
-    
-    
-
     useEffect(() => {
         if (coordinatesFromPostgres.length > 0) {
             setPointCoordinates(coordinatesFromPostgres.filter(coord => coord.geometryType === 'Point').map(coord => coord.coordinates));
@@ -343,15 +356,16 @@ const MapComponent = () => {
     const handleBringButtonClick = async () => {
         try {
             const coordinates = await getCoordinatesFromPostgres();
-            const coordinateArray = coordinates.map(coordinate => ({
-                latitude: coordinate[0],
-                longitude: coordinate[1]
-            }));
-            setCoordinatesFromPostgres(coordinateArray);
+            setCoordinatesFromPostgres(coordinates);
+            toast.current.show({ severity: 'success', summary: 'Success', detail: 'Coordinates retrieved from PostgreSQL table.' });
         } catch (error) {
-            toast.current.show('An error occurred while retrieving coordinates from the PostgreSQL table.', error);
+            toast.current.show({ severity: 'error', summary: 'Error', detail: 'An error occurred while retrieving coordinates from the PostgreSQL table.' });
         }
     };
+    
+    
+    
+    
     const handleClearTableClick = () => {
         setCoordinatesFromPostgres([]);
     }
@@ -361,7 +375,7 @@ const MapComponent = () => {
             <Sidebar visible={visibleRight} position='right' onHide={() => setVisibleRight(false)} className="sidebar-left">
                 <h2>DataBase Table</h2>
                 <div className="table-container">
-                    <DataTable value={coordinatesFromPostgres}>
+                    <DataTable  value={coordinatesFromPostgres}>
                         <Column field="latitude" header="latitude" />
                         <Column field="longitude" header="longitude" />
                     </DataTable>

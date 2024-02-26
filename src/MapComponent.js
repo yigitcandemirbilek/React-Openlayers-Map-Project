@@ -34,6 +34,9 @@ const MapComponent = () => {
     const popup = useRef(null);
     const popupOverlay = useRef(null);
     const [visibleRight, setVisibleRight] = useState(false);
+    const [activeInteraction, setActiveInteraction] = useState(false);
+
+
 
 
 
@@ -72,21 +75,83 @@ const MapComponent = () => {
         };
     }, []);
 
+    const activatePointDrawTool = () => {
+        setLineCoordinates([]); // Diğer koordinatları sıfırla
+        setPolygonCoordinates([]);
+        setActiveInteraction('point'); // 'point' aracı etkinleştiriliyor
+    };
+    
+    const activatePolygonDrawTool = () => {
+        setPointCoordinates([]); // Diğer koordinatları sıfırla
+        setLineCoordinates([]);
+        setActiveInteraction('polygon'); // 'polygon' aracı etkinleştiriliyor
+    };
+    
+    const activateLineDrawTool = () => {
+        setPointCoordinates([]); // Diğer koordinatları sıfırla
+        setPolygonCoordinates([]);
+        setActiveInteraction('line'); // 'line' aracı etkinleştiriliyor
+    };
+
     useEffect(() => {
+        if (activeInteraction) return; // Eğer etkileşim aktifse erken dön
+    
         if (map) {
-            map.on('singleclick', function (evt) {
+            const handleMapClick = (evt) => {
                 const clickedCoordinate = evt.coordinate;
-                const features = map.getFeaturesAtPixel(evt.pixel);
-                if (features && features.length === 1) {
-                    const feature = features[0];
-                    const geometry = feature.getGeometry();
-                    const coordinates = getFeatureCoordinates(geometry);
-                    const geometryType = geometry.getType();
-                    showPopup(clickedCoordinate, coordinates, geometryType);
+                let targetFeature = null;
+            
+                // Haritadaki her katmanı döngüye alarak tıklanan pikseldeki ilk özelliği al
+                map.forEachFeatureAtPixel(evt.pixel, (feature, layer) => {
+                    if (!targetFeature) {
+                        targetFeature = {
+                            feature: feature,
+                            layer: layer
+                        };
+                    }
+                });
+            
+                if (targetFeature) {
+                    const clickedFeature = targetFeature.feature;
+                    
+                    // Tıklanan özellik bir overlay ise ve üzerinde veri bulunuyorsa popup aç
+                    if (clickedFeature && clickedFeature.get("isOverlay") === true !== undefined) {
+                        const selectedGeometry = clickedFeature.getGeometry();
+                        const coordinates = getFeatureCoordinates(selectedGeometry);
+                        const geometryType = selectedGeometry.getType();
+                        // Seçilen çizimi vurgula, örneğin rengini değiştir
+                        clickedFeature.setStyle(/* yeni stil */);
+                        // Popup'ı göster
+                        showPopup(clickedCoordinate, coordinates, geometryType);
+                    } else {
+                        // Tıklanan özellik bir overlay değil veya üzerinde veri yoksa, diğer işlemleri gerçekleştir
+                        const selectedGeometry = clickedFeature.getGeometry();
+                        const coordinates = getFeatureCoordinates(selectedGeometry);
+                        const geometryType = selectedGeometry.getType();
+                        // Seçilen çizimi vurgula, örneğin rengini değiştir
+                        clickedFeature.setStyle(/* yeni stil */);
+                        // Popup'ı gösterme veya başka bir işlem yapma
+                        // ...
+                    }
                 }
-            });
+            };
+            
+            
+            
+    
+            map.on('singleclick', handleMapClick);
+    
+            return () => {
+                map.un('singleclick', handleMapClick);
+            };
         }
-    }, [map]);
+    }, [map, activeInteraction]);
+    
+    
+    
+    
+    
+    
 
     useEffect(() => {
         if (coordinatesFromPostgres.length > 0) {
@@ -120,18 +185,22 @@ const MapComponent = () => {
     };
 
     const showPopup = (clickedCoordinate, coordinates, geometryType) => {
-        if (!popup.current) {
-            popup.current = new Overlay({
-                element: document.createElement('div'),
-                autoPan: {
-                    animation: {
-                        duration: 250,
-                    },
-                },
-            });
-            map.addOverlay(popup.current);
+        // Mevcut popup varsa kapat
+        if (popup.current) {
+            map.removeOverlay(popup.current);
+            popup.current = null;
         }
-
+    
+        popup.current = new Overlay({
+            element: document.createElement('div'),
+            autoPan: {
+                animation: {
+                    duration: 250,
+                },
+            },
+        });
+        map.addOverlay(popup.current);
+    
         const popupElement = popup.current.getElement();
         popupElement.className = 'ol-popup';
         const popupContent = document.createElement('div');
@@ -166,7 +235,8 @@ const MapComponent = () => {
         closer.href = '#';
         closer.className = 'ol-popup-closer';
         closer.onclick = function () {
-            popupOverlay.setPosition(undefined);
+            map.removeOverlay(popup.current);
+            popup.current = null;
             closer.blur();
             return false;
         };
@@ -196,7 +266,7 @@ const MapComponent = () => {
                 let pointCoordinates = [];
                 let lineCoordinates = [];
                 let polygonCoordinates = [];
-        
+    
                 map.getLayers().forEach(layer => {
                     if (layer instanceof VectorLayer) {
                         const source = layer.getSource();
@@ -220,35 +290,20 @@ const MapComponent = () => {
                         });
                     }
                 });
-        
+    
                 await saveCoordinatesToPostgres(pointCoordinates, lineCoordinates, polygonCoordinates);
                 toast.current.show({ severity: 'success', summary: 'Successful', detail: 'The coordinates were recorded in the table.' });
             } catch (error) {
                 toast.current.show({ severity: 'error', summary: 'Error', detail: 'Saving coordinates to table failed.' });
             }
         };
-
+    
         popupElement.appendChild(saveButton);
-
-        const getButton = document.createElement('button');
-        getButton.textContent = 'Bring';
-        getButton.onclick = async function () {
-            try {
-                const coordinates = await getCoordinatesFromPostgres();
-                const coordinateArray = coordinates.map(coordinate => ({
-                    latitude: coordinate[0],
-                    longitude: coordinate[1]
-                }));
-                setCoordinatesFromPostgres(coordinateArray);
-            } catch (error) {
-                toast.current.show('An error occurred while retrieving coordinates from the PostgreSQL table.', error);
-            }
-        };
-
-        popupElement.appendChild(getButton);
-
+    
         popup.current.setPosition(clickedCoordinate);
     };
+    
+    
 
     const openGoogleMaps = (latitude, longitude) => {
         const coordinates = `${latitude},${longitude}`;
@@ -318,30 +373,21 @@ const MapComponent = () => {
             </Sidebar>
             <div className="toolbar">
                 <div className="toolbar-content">
-                    <PointDrawTool
-                        map={map}
-                        className="pointbtn"
-                        onDrawEnd={coordinates => {
-                            setPointCoordinates([...pointCoordinates, coordinates]);
-                            showPopup(coordinates, coordinates, 'Point');
-                        }}
-                    />
-                    <PolygonDrawTool
-                        map={map}
-                        className="polygonbtn"
-                        onDrawEnd={coordinates => {
-                            setPolygonCoordinates([...polygonCoordinates, coordinates]);
-                            showPopup(coordinates[0], coordinates, 'Polygon');
-                        }}
-                    />
-                    <LineDrawTool
-                        map={map}
-                        className="linebtn"
-                        onDrawEnd={coordinates => {
-                            setLineCoordinates([...lineCoordinates, coordinates]);
-                            showPopup(coordinates[0], coordinates, 'LineString');
-                        }}
-                    />
+                <PointDrawTool
+                map={map}
+                className="pointbtn"
+                onClick={activatePointDrawTool}
+                />
+                <PolygonDrawTool
+                map={map}
+                className="polygonbtn"
+                onClick={activatePolygonDrawTool}
+                />
+                <LineDrawTool
+                map={map}
+                className="linebtn"
+                onClick={activateLineDrawTool}
+                />
                     <button
                         onClick={handleClearButtonClick}
                         className="clearbtn"

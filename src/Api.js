@@ -20,9 +20,9 @@ export const saveCoordinatesToPostgres = async (pointCoordinates, lineCoordinate
 
     // Axios ile POST isteği yaparak koordinatları PostgreSQL'e kaydet
     const responses = await Promise.all([
-      ...pointWKTGeometry.map(wkt => axios.post('https://localhost:7044/api/SpatialData', { wkt })),
-      ...lineWKTGeometry.map(wkt => axios.post('https://localhost:7044/api/SpatialData', { wkt })),
-      ...polygonWKTGeometry.map(wkt => axios.post('https://localhost:7044/api/SpatialData', { wkt }))
+      ...pointWKTGeometry.map(wkt => axios.post('https://localhost:7196/api/SpatialData', { wkt })),
+      ...lineWKTGeometry.map(wkt => axios.post('https://localhost:7196/api/SpatialData', { wkt })),
+      ...polygonWKTGeometry.map(wkt => axios.post('https://localhost:7196/api/SpatialData', { wkt }))
     ]);
 
     // İşlem başarılı olduysa geri dönen veriyi konsola yazdır
@@ -39,7 +39,7 @@ export const saveCoordinatesToPostgres = async (pointCoordinates, lineCoordinate
 export const getCoordinatesFromPostgres = async () => {
   try {
     // Axios ile GET isteği yaparak PostgreSQL'den koordinatları al
-    const response = await axios.get('https://localhost:7044/api/SpatialData');
+    const response = await axios.get('https://localhost:7196/api/SpatialData');
 
     // İşlem başarılı olduysa geri dönen veriyi konsola yazdır
     console.log(response.data);

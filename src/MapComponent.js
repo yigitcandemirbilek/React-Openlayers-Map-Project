@@ -353,6 +353,8 @@ const MapComponent = () => {
         });
     };
 
+    
+
     const handleBringButtonClick = async () => {
         try {
             const coordinates = await getCoordinatesFromPostgres();
@@ -375,10 +377,10 @@ const MapComponent = () => {
             <Sidebar visible={visibleRight} position='right' onHide={() => setVisibleRight(false)} className="sidebar-left">
                 <h2>DataBase Table</h2>
                 <div className="table-container">
-                    <DataTable  value={coordinatesFromPostgres}>
-                        <Column field="latitude" header="latitude" />
-                        <Column field="longitude" header="longitude" />
-                    </DataTable>
+                <DataTable value={coordinatesFromPostgres}>
+    <Column field="id" header="ID" />
+    <Column field="wkt" header="WKT" />
+</DataTable>
                     <div className="table-buttons">
                     <Button label="Bring" onClick={handleBringButtonClick} className="p-button-text" />
                     <Button label="Clear" onClick={handleClearTableClick} className="p-button-text" />

@@ -44,10 +44,10 @@ export const getCoordinatesFromPostgres = async () => {
     // İşlem başarılı olduysa geri dönen veriyi konsola yazdır
     console.log(response.data);
     
-    // Veriyi dönüştürerek her bir öğenin içinde latitude ve longitude alanları olan bir nesne dizisi oluştur
+    // Veriyi dönüştürerek her bir öğenin içinde id ve wkt alanları olan bir nesne dizisi oluştur
     const formattedData = response.data.map(item => ({
-      latitude: item.latitude, // Varsa uygun alanları al, yoksa undefined olacak
-      longitude: item.longitude // Varsa uygun alanları al, yoksa undefined olacak
+      id: item.id, // Varsa uygun alanları al, yoksa undefined olacak
+      wkt: item.wkt // Varsa uygun alanları al, yoksa undefined olacak
     }));
     
     return formattedData; // İsteğin döndürdüğü veriyi geri döndür
@@ -56,4 +56,5 @@ export const getCoordinatesFromPostgres = async () => {
     throw error;
   }
 };
+
 
